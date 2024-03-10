@@ -1,0 +1,2 @@
+class NoDBInstance(Exception):
+    pass
