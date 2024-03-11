@@ -14,7 +14,7 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    created_at: datetime
+    created_at: datetime | None
 
     class Config:
         orm_mode = True
