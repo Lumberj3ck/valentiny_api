@@ -1,15 +1,32 @@
 from fastapi import Depends, FastAPI, HTTPException
-from sql import models, database, crud
+from app_data import models, database, crud
 from sqlalchemy.orm import Session
-from sql.schemas import UserCreate, User, Section, SectionCreate, TextInput, SectionUpdate
+from app_data.schemas import UserCreate, User, Section, SectionCreate, TextInput, SectionUpdate
 from utils import transform_sections
-from sql.custom_exceptions import NoDBInstance
+from app_data.custom_exceptions import NoDBInstance
+from fastapi.security import OAuth2PasswordBearer
+from typing import Annotated
+ 
 
 # models.Base.metadata.drop_all(bind=database.engine)
 models.Base.metadata.create_all(bind=database.engine)
 
 app = FastAPI()
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+def get_user_from_token(token):
+    return User(
+        username=token + "fakedecoded", email="john@example.com", id=1
+    )
+
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
+    user = get_user_from_token(token)
+    return user
+
+@app.get("/items/")
+def read_items(user: User = Depends(get_current_user)):
+    # for this request we have to add jwt token as a header for request
+    return user
 
 def get_db():
     db = database.SessionLocal()
