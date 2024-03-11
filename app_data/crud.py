@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.sql.functions import mode
 from . import models, schemas
-from .custom_exceptions import NoDBInstance
+from ..custom_exceptions import NoDBInstance
 
 
 def get_users(db: Session):
@@ -55,7 +55,7 @@ def get_sections(db: Session):
 def update_text_input(db: Session, text_input):
     db_text_input = db.query(models.TextInput).filter(models.TextInput.id == text_input.id).first()
     if db_text_input is None:
-        return None
+        raise NoDBInstance
 
     db_text_input.content = text_input.content
     db_text_input.index = text_input.index
@@ -69,13 +69,13 @@ def get_sections_by_user(user_id, db: Session):
 def update_image_input(db: Session, image_input):
     db_image_input = db.query(models.ImageInput).filter(models.ImageInput.id == image_input.id).first()
     if db_image_input is None:
-        return None
+        raise NoDBInstance
 
     db_image_input.link = image_input.link
     db_image_input.index = image_input.index
     db.commit()
 
-def update_section(db: Session, section: schemas.Section):
+def update_section(db: Session, section: schemas.SectionUpdate):
     db_section = db.query(models.Section).filter(models.Section.id == section.id).first()
 
     if db_section is None:
@@ -98,6 +98,12 @@ def update_section(db: Session, section: schemas.Section):
 
 
 def create_section(db: Session, section: schemas.SectionCreate, user: schemas.User):
+    db_section_check = db.query(models.Section).filter_by(user_id=user.id, name=section.name).first()
+    print(db_section_check)
+
+    if db_section_check:
+        raise NoDBInstance
+
     db_section = models.Section(
         index=section.index,
         render=section.render,

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from enum import Enum
 from datetime import datetime
+from pydantic import validator
 
 
 class UserBase(BaseModel):
@@ -23,6 +24,7 @@ class User(UserBase):
 class TextInputCreate(BaseModel):
     index: int
     content: str
+    # section_id: int
 
 
 class ImageInputCreate(BaseModel):
@@ -58,6 +60,22 @@ class SectionBase(BaseModel):
 class SectionCreate(SectionBase):
     image_inputs: list[ImageInputCreate] | None = None
     text_inputs: list[TextInputCreate] | None = None
+
+    @validator('text_inputs')
+    def validate_text_input_indexes(cls, v, values):
+        if v is not None:
+            indexes = {input_data.index for input_data in v}
+            if len(indexes) != len(v):
+                raise ValueError("Text input indexes must be unique within a section")
+        return v
+
+    @validator('image_inputs')
+    def validate_image_input_indexes(cls, v, values):
+        if v is not None:
+            indexes = {input_data.index for input_data in v}
+            if len(indexes) != len(v):
+                raise ValueError("Image input indexes must be unique within a section")
+        return v
 
 class SectionUpdate(SectionBase):
     id: int

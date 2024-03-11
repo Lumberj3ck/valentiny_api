@@ -1,4 +1,4 @@
-from app_data import database
+from .app_data import database
 
 
 
