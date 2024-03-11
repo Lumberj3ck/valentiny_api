@@ -1,19 +1,25 @@
-from fastapi import APIRouter
-from ..dependencies import get_db
-from ..app_data.schemas import UserCreate, User
+import os
+from datetime import timedelta
+from fastapi import APIRouter, status
+from ..dependencies import get_db, create_access_token
+from ..app_data.schemas import UserCreate, User, UserCredentials, Token
+from fastapi.security import OAuth2PasswordRequestForm
 from ..app_data import crud
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
+from ..utils.password_security import authenticate_user
+from typing import Annotated
 
 router = APIRouter()
 
 
+
 @router.post("/users/create_user")
 def create_user(user: UserCreate, db: Session = Depends(get_db)) -> User:
-    db_user = crud.get_user_by_email(db, email=user.email)
-    # or get_user_by_username  if any of them!
+    db_user = crud.get_user_by_email_or_username(db, user)
+
     if db_user:
-        raise HTTPException(status_code=400, detail="Email is already used")
+        raise HTTPException(status_code=400, detail="Email or username is already used")
     new_user = crud.create_user(db, user)
     return new_user
 
@@ -26,3 +32,21 @@ async def get_user_handler(user_id: int, db: Session = Depends(get_db)):
 def get_users(db: Session = Depends(get_db)):
     users = crud.get_users(db)
     return users
+
+@router.post("/token")
+async def login_for_access_token(
+        # credentials: UserCredentials, 
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        db: Session = Depends(get_db)) -> Token:
+    user = authenticate_user(db, form_data.username.lower(), form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
+    access_token = create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")

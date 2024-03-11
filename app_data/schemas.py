@@ -3,15 +3,35 @@ from enum import Enum
 from datetime import datetime
 from pydantic import validator
 
+class UserCredentials(BaseModel):
+    username: str | None = None
+    password: str | None = None
+
+    @validator('username')
+    def convert_username_to_lower(cls, v):
+        return v.lower()
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    username: str | None = None
 
 class UserBase(BaseModel):
     username: str
     email: str
 
+    @validator('username')
+    def convert_username_to_lower(cls, v):
+        return v.lower()
+
 
 class UserCreate(UserBase):
     password: str
 
+class UserAuthenticate(UserBase):
+    id: int
 
 class User(UserBase):
     id: int

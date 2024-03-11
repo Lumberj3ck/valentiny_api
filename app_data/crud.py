@@ -1,25 +1,31 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy.sql.functions import mode
+from sqlalchemy import or_
 from . import models, schemas
-from ..custom_exceptions import NoDBInstance
+from ..custom_exceptions import NoDBInstance, WrongSectionID, UserNonExists
+from ..utils.password_security import get_password_hash
 
 
 def get_users(db: Session):
     return db.query(models.User).all()
 
+def get_user_by_username(db: Session, username: str | None):
+    return db.query(models.User).filter(models.User.username == username).first()
 
 def get_user(db: Session, user_id: int):
     return db.query(models.User).filter(models.User.id == user_id).first()
 
 
-def get_user_by_email(db: Session, email: str):
-    return db.query(models.User).filter(models.User.email == email).first()
+# def get_user_by_email(db: Session, email: str):
+#     return db.query(models.User).filter(models.User.email == email).first()
+
+def get_user_by_email_or_username(db: Session, user: schemas.UserCreate):
+    return db.query(models.User).filter(or_(models.User.email == user.email, models.User.username == user.username)).first()
 
 
 def create_user(db: Session, user: schemas.UserCreate):
-    fake_hashed_password = user.password + "notreallyhashed"
+    password_hash = get_password_hash(user.password)
     db_user = models.User(
-        username=user.username, email=user.email, password=fake_hashed_password
+        username=user.username, email=user.email, password=password_hash
     )
     # db.add(db_user)
     # db.commit()
@@ -63,7 +69,6 @@ def update_text_input(db: Session, text_input):
 
 def get_sections_by_user(user_id, db: Session):
     db_sections = db.query(models.Section).options(joinedload(models.Section.image_inputs), joinedload(models.Section.text_inputs)).filter(models.Section.user_id == user_id).all()
-    print(db_sections)
     return db_sections
 
 def update_image_input(db: Session, image_input):
@@ -75,11 +80,15 @@ def update_image_input(db: Session, image_input):
     db_image_input.index = image_input.index
     db.commit()
 
-def update_section(db: Session, section: schemas.SectionUpdate):
+def update_section(db: Session, section: schemas.SectionUpdate, user: schemas.UserAuthenticate
+                   ):
     db_section = db.query(models.Section).filter(models.Section.id == section.id).first()
 
     if db_section is None:
         raise NoDBInstance
+    
+    if db_section.user_id != user.id:
+        raise WrongSectionID
 
     for field, value in section.dict().items():
         print(field, value)
@@ -99,7 +108,10 @@ def update_section(db: Session, section: schemas.SectionUpdate):
 
 def create_section(db: Session, section: schemas.SectionCreate, user: schemas.User):
     db_section_check = db.query(models.Section).filter_by(user_id=user.id, name=section.name).first()
-    print(db_section_check)
+    user = get_user(db, user.id)
+
+    if not user:
+        raise UserNonExists
 
     if db_section_check:
         raise NoDBInstance
