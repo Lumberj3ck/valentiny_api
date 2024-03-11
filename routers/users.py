@@ -16,3 +16,13 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> User:
         raise HTTPException(status_code=400, detail="Email is already used")
     new_user = crud.create_user(db, user)
     return new_user
+
+@router.get("/users/{user_id}")
+async def get_user_handler(user_id: int, db: Session = Depends(get_db)):
+    user = crud.get_user(db, user_id)
+    return user
+
+@router.get("/users", response_model=list[User])
+def get_users(db: Session = Depends(get_db)):
+    users = crud.get_users(db)
+    return users
