@@ -1,7 +1,9 @@
 Can I make json key as a integer?
 
-Set a unique key pair in db for name and user inside of section 
+- [] Set a unique key pair in db for name and user inside of section 
 Because it is imposible for one user to have two the same sections
+- [] Set a unique name per request for update and create; Name should be unique
+for every section inside the list
 
 
 Create endpoint for getting user sections by user id 
@@ -18,3 +20,24 @@ changes we can send update api call
 
 
 But we api after post can just send data without additional cal
+
+
+
+User registration 
+Send post request to /users/create_user/
+If success than change page to login page
+So when user sends username and password
+we trying authenticate user if we get right user then we can send for user 
+jwt token with username 
+on frontend we save given token 
+then whenever we need to access /sections/user
+we need to send jwt token if there is no token (api will decrypt username from
+jwt and then return the user and accessed information)
+; give login page 
+
+FOR BACKEND 
+whenever we want to restrict access to the endpoint we must add auth dependence which
+will seek for bearer jwt token in headers
+
+
+Whenever user logins frontend should send a request to a api user sections 
