@@ -106,7 +106,7 @@ def update_section(db: Session, section: schemas.SectionUpdate, user: schemas.Us
     db.commit()
 
 
-def create_section(db: Session, section: schemas.SectionCreate, user: schemas.User):
+def create_section(db: Session, section: schemas.SectionCreate, user: schemas.UserAuthenticate):
     db_section_check = db.query(models.Section).filter_by(user_id=user.id, name=section.name).first()
     user = get_user(db, user.id)
 

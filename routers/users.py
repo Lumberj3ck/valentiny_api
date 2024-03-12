@@ -15,13 +15,19 @@ router = APIRouter()
 
 
 @router.post("/users/create_user")
-def create_user(user: UserCreate, db: Session = Depends(get_db)) -> User:
+def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
     db_user = crud.get_user_by_email_or_username(db, user)
 
     if db_user:
         raise HTTPException(status_code=400, detail="Email or username is already used")
     new_user = crud.create_user(db, user)
-    return new_user
+    if not new_user:
+        raise HTTPException(status_code=400, detail="User creating failed")
+    access_token_expires = timedelta(minutes=os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", 1440))
+    access_token = create_access_token(
+            data={"sub": new_user.username}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
 
 @router.get("/users/{user_id}")
 async def get_user_handler(user_id: int, db: Session = Depends(get_db)):
@@ -33,7 +39,7 @@ def get_users(db: Session = Depends(get_db)):
     users = crud.get_users(db)
     return users
 
-@router.post("/token")
+@router.post("/login")
 async def login_for_access_token(
         # credentials: UserCredentials, 
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
