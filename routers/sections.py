@@ -41,7 +41,7 @@ def update_sections(user: Annotated[UserAuthenticate, Depends(get_current_user)]
     return {"message": "Updated successfully"}
 
 @router.post("/create_sections")
-def create_sections(user: User, sections: list[SectionCreate], db: Session = Depends(get_db)):
+def create_sections(user: Annotated[UserAuthenticate, Depends(get_current_user)], sections: list[SectionCreate], db: Session = Depends(get_db)):
     for section in sections:
         try:
             crud.create_section(db, section, user)
