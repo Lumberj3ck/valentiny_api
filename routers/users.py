@@ -13,7 +13,6 @@ from typing import Annotated
 router = APIRouter()
 
 
-
 @router.post("/users/create_user")
 def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
     db_user = crud.get_user_by_email_or_username(db, user)
@@ -29,22 +28,22 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
     )
     return Token(access_token=access_token, token_type="bearer")
 
-@router.get("/users/{user_id}")
-async def get_user_handler(user_id: int, db: Session = Depends(get_db)):
-    user = crud.get_user(db, user_id)
-    return user
+# @router.get("/users/{user_id}")
+# async def get_user_handler(user_id: int, db: Session = Depends(get_db)):
+#     user = crud.get_user(db, user_id)
+#     return user
 
-@router.get("/users", response_model=list[User])
-def get_users(db: Session = Depends(get_db)):
-    users = crud.get_users(db)
-    return users
+# @router.get("/users", response_model=list[User])
+# def get_users(db: Session = Depends(get_db)):
+#     users = crud.get_users(db)
+#     return users
 
 @router.post("/login")
 async def login_for_access_token(
-        # credentials: UserCredentials, 
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        credentials: UserCredentials, 
+        # form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         db: Session = Depends(get_db)) -> Token:
-    user = authenticate_user(db, form_data.username.lower(), form_data.password)
+    user = authenticate_user(db, credentials.username.lower(), credentials.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

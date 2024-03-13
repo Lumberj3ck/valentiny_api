@@ -43,13 +43,13 @@ class User(UserBase):
 
 class TextInputCreate(BaseModel):
     index: int
-    content: str
+    content: str 
     # section_id: int
 
 
 class ImageInputCreate(BaseModel):
     index: int
-    link: str
+    link: str | None
 
 
 class TextInput(TextInputCreate):
