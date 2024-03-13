@@ -1,5 +1,6 @@
 from typing import Annotated
 from fastapi import APIRouter
+from sqlalchemy import delete
 from ..dependencies import get_current_user, get_db
 from ..app_data import crud
 from fastapi import Depends, HTTPException
@@ -11,16 +12,22 @@ from ..app_data.schemas import TextInput
 
 router = APIRouter()
 
-@router.get("/text_inputs", response_model=list[TextInput])
-async def get_text_inputs(db: Session = Depends(get_db)):
-    text_inputs = crud.get_text_inputs(db)
-    return text_inputs
+# @router.delete("/section/delete/{section_id}")
+# async def delete_section(section_id: int, db: Session = Depends(get_db)):
+#     crud.delete_section(db, section_id)
+#     # sections_dict = transform_sections(sections)
+#     return {'message' : 'removed successfully'} 
 
-@router.get("/sections", response_model=dict[str, Section])
-async def get_sections(db: Session = Depends(get_db)):
-    sections = crud.get_sections(db)
-    sections_dict = transform_sections(sections)
-    return sections_dict
+# @router.get("/text_inputs", response_model=list[TextInput])
+# async def get_text_inputs(db: Session = Depends(get_db)):
+#     text_inputs = crud.get_text_inputs(db)
+#     return text_inputs
+#
+# @router.get("/sections", response_model=dict[str, Section])
+# async def get_sections(db: Session = Depends(get_db)):
+#     sections = crud.get_sections(db)
+#     sections_dict = transform_sections(sections)
+#     return sections_dict
 
 @router.get("/user/sections/", response_model=dict[str, Section])
 async def get_sections_by_user(user: Annotated[User, Depends(get_current_user)], db: Session = Depends(get_db)):
@@ -49,5 +56,9 @@ def create_sections(user: Annotated[UserAuthenticate, Depends(get_current_user)]
             raise HTTPException(status_code=400, detail="Section with such name is already exists!")
         except UserNonExists:
             raise HTTPException(status_code=400, detail="User is not exist")
-    return {"message": "Created successfully"}
+    
+    refreshed_sections = crud.get_sections_by_user(user.id, db)
+    sections_dict = transform_sections(refreshed_sections)
+    return sections_dict
+    # return {"message": "Created successfully"}
 

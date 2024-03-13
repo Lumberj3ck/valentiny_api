@@ -4,6 +4,14 @@ from . import models, schemas
 from ..custom_exceptions import NoDBInstance, WrongSectionID, UserNonExists
 from ..utils.password_security import get_password_hash
 
+def delete_section(db: Session, section_id: int):
+    section = db.query(models.Section).filter(models.Section.id == section_id).first()
+    if section:
+        db.delete(section)
+        db.commit()
+        return True
+    else:
+        return False
 
 def get_users(db: Session):
     return db.query(models.User).all()
