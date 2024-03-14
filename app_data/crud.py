@@ -88,7 +88,7 @@ def update_image_input(db: Session, image_input):
     db_image_input.index = image_input.index
     db.commit()
 
-def update_section(db: Session, section: schemas.SectionUpdate, user: schemas.UserAuthenticate
+def update_section(db: Session, section: schemas.SectionSave, user: schemas.UserAuthenticate
                    ):
     db_section = db.query(models.Section).filter(models.Section.id == section.id).first()
 
@@ -114,7 +114,7 @@ def update_section(db: Session, section: schemas.SectionUpdate, user: schemas.Us
     db.commit()
 
 
-def create_section(db: Session, section: schemas.SectionCreate, user: schemas.UserAuthenticate):
+def create_section(db: Session, section: schemas.SectionSave, user: schemas.UserAuthenticate):
     db_section_check = db.query(models.Section).filter_by(user_id=user.id, name=section.name).first()
     user = get_user(db, user.id)
 
