@@ -10,7 +10,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-dotenv_path = Path('./postcard_api/.env.api')
+dotenv_path = Path('app/.env.api')
 load_dotenv(dotenv_path=dotenv_path)
 
 SECRET_KEY = os.getenv("SECRET_KEY")
