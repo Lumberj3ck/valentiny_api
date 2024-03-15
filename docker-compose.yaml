@@ -14,8 +14,9 @@ services:
       - app/.env
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data/
-    expose:
-      - 5432
+    ports:
+      - 5432:5432
+
 
 volumes:
   postgres_data_prod:
