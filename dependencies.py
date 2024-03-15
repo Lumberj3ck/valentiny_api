@@ -7,9 +7,14 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from .app_data import crud
 import os
+from dotenv import load_dotenv
+from pathlib import Path
 
-SECRET_KEY = os.environ.get("SECRET_KEY", 'f9d431391c84fb06064ef831bb6a7b2fe424b14bee68c094706759c5889ec237')
-ALGORITHM = os.environ.get("ALGORITHM", 'HS256')
+dotenv_path = Path('./postcard_api/.env.api')
+load_dotenv(dotenv_path=dotenv_path)
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 
 def get_db():
     db = database.SessionLocal()
