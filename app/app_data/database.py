@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 import os
 
-dotenv_path = Path('./postcard_api/.env')
+dotenv_path = Path('app/.env')
 load_dotenv(dotenv_path=dotenv_path)
 
 SQL_DB = os.getenv('POSTGRES_DB') 
