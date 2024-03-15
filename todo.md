@@ -1,4 +1,8 @@
 Can I make json key as a integer?
+Deployments potential problems:
+Path for .env.api file inside of dependencies.py
+Db not created
+Change url path for database inside of db.py
 
 - [] Set a unique key pair in db for name and user inside of section 
 Because it is imposible for one user to have two the same sections
