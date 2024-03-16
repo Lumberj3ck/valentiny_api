@@ -10,7 +10,7 @@ origins = [
     "http://localhost",
     "http://localhost:5173",
     "https://www.my-valentine-postcard.site/",
-    "https://postcard-api.25-7.ro/"
+    "https://postcard-api.24-7.ro/"
 ]
 
 app = FastAPI()
