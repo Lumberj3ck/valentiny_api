@@ -39,7 +39,7 @@ async def get_sections_by_user(user: Annotated[User, Depends(get_current_user)],
     sections_dict = transform_sections(sections)
     return sections_dict
 
-@router.put("/save_sections")
+@router.put("/save_sections/")
 def save_sections(user: Annotated[UserAuthenticate, Depends(get_current_user)], sections: list[SectionSave], db: Session = Depends(get_db)):
     # print(user)
     for section in sections:

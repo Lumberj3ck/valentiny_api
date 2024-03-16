@@ -17,7 +17,7 @@ router = APIRouter()
 dotenv_path = Path('.api_env')
 load_dotenv(dotenv_path=dotenv_path)
 
-@router.post("/users/create_user")
+@router.post("/users/create_user/")
 def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
     db_user = crud.get_user_by_email_or_username(db, user)
 
@@ -42,7 +42,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
 #     users = crud.get_users(db)
 #     return users
 
-@router.post("/login")
+@router.post("/login/")
 async def login_for_access_token(
         credentials: UserCredentials, 
         # form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
