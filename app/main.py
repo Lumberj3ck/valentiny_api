@@ -9,7 +9,8 @@ models.Base.metadata.create_all(bind=database.engine)
 origins = [
     "http://localhost",
     "http://localhost:5173",
-    "https://www.my-valentine-postcard.site/"
+    "https://www.my-valentine-postcard.site/",
+    "https://postcard-api.24-7.ro/"
 ]
 
 app = FastAPI()
