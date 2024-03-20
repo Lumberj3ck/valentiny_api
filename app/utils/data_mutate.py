@@ -13,7 +13,3 @@ def transform_sections(sections):
 
     sections_dict = {section.name: section for section in sections}
     return sections_dict
-
-
-
-
