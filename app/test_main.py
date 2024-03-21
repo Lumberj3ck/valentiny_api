@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from sqlalchemy.engine import create
 from .main import app
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -162,3 +163,28 @@ def test_login_error():
     )
     assert response.json() == {'detail': 'Incorrect username or password'}
 
+
+def test_get_user_sections_no_authorise():
+    response = client.get('/user/sections/')
+    assert response.json() == {'detail': 'Not authenticated'}
+
+def test_get_registered_user_sections():
+    response = create_user('lumberjack', 'lumberjack@gmail.com')
+    jwt_token = response.json().get("access_token", "")
+    response = client.get('/user/sections/', headers={"Authorization": f"Bearer {jwt_token}"})
+    assert response.json() == {}
+
+def test_get_login_user_sections():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    create_user('unique_username', 'unique_username@gmail.com')
+    response = client.post(
+        "/login",
+        json={
+            "username": "unique_username",
+            "password": "chimichangas4life",
+        },
+    )
+    jwt_token = response.json().get("access_token", "")
+    response = client.get('/user/sections/', headers={"Authorization": f"Bearer {jwt_token}"})
+    assert response.json() == {}
