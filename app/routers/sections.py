@@ -5,10 +5,10 @@ from fastapi import APIRouter
 from ..dependencies import get_current_user, get_db
 from ..app_data import crud
 from fastapi import Depends, HTTPException
-from ..app_data.schemas import User, Section, UserAuthenticate, SectionSave
+from ..app_data.schemas import User, Section, UserAuthenticate, SectionSave, SectionSaveList
 from sqlalchemy.orm import Session
 from ..utils.data_mutate import transform_sections
-from ..custom_exceptions import NoDBInstance, UserNonExists, WrongSectionID
+from ..custom_exceptions import NoDBInstance, UserNonExists, WrongSectionID, DBInstanceExists
 
 # from ..app_data.schemas import TextInput
 
@@ -48,27 +48,19 @@ async def get_sections_by_user(
 @router.put("/save_sections/")
 def save_sections(
     user: Annotated[UserAuthenticate, Depends(get_current_user)],
-    sections: list[SectionSave],
+    sections_list: SectionSaveList,
     db: Session = Depends(get_db),
 ):
-    # print(user)
-    for section in sections:
-        print(section)
+    for section in sections_list.sections:
         if section.id:
-            # try:
-            #     crud.update_section(db, section, user)
-            # except NoDBInstance:
-            #     raise HTTPException(status_code=400, detail="No section or text input or image input with given id")
-            # except WrongSectionID:
-            #     raise HTTPException(status_code=400, detail="Not enough permissions to modify a given section")
-            update_section_raise_if_exception(db, section, user)
+            update_user_section(db, section, user)
         else:
-            create_section_raise_if_exception(db, section, user)
+            create_user_section(db, section, user)
 
     return {"message": "Saved successfully"}
 
 
-def update_section_raise_if_exception(
+def update_user_section(
     db: Session, section: SectionSave, user: UserAuthenticate
 ):
     try:
@@ -84,12 +76,12 @@ def update_section_raise_if_exception(
         )
 
 
-def create_section_raise_if_exception(
+def create_user_section(
     db: Session, section: SectionSave, user: UserAuthenticate
 ):
     try:
         crud.create_section(db, section, user)
-    except NoDBInstance:
+    except DBInstanceExists:
         raise HTTPException(
             status_code=400, detail="Section with such name is already exists!"
         )

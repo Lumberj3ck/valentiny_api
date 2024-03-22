@@ -77,6 +77,12 @@ class SectionNames(Enum):
     like_you_section = "like_you_section"
     reasons_like_you_section = "reasons_like_you_section"
 
+def validate_input_indexes(v):
+    if v is not None:
+        indexes = {input_data["index"] for input_data in v}
+        if len(indexes) != len(v):
+            raise ValueError("Input indexes must be unique within a section")
+    return v
 
 class SectionBase(BaseModel):
     index: int
@@ -86,22 +92,6 @@ class SectionBase(BaseModel):
     text_color: str | None
 
 
-def validate_input_indexes(v):
-    if v is not None:
-        print(v)
-        indexes = {input_data["index"] for input_data in v}
-        if len(indexes) != len(v):
-            raise ValueError("Input indexes must be unique within a section")
-    return v
-
-
-# class SectionCreate(SectionBase):
-#     image_inputs: list[ImageInputCreate] | None = None
-#     text_inputs: list[TextInputCreate] | None = None
-#
-#     _validate_text_input_indexes = validator('text_inputs', pre=True)(validate_input_indexes)
-#     _validate_image_input_indexes = validator('image_inputs', pre=True)(validate_input_indexes)
-#
 class SectionSave(SectionBase):
     id: int | None = None
     image_inputs: list[ImageInput] | None = None
@@ -117,6 +107,12 @@ class SectionSave(SectionBase):
     class Config:
         orm_mode = True
 
+class SectionSaveList(BaseModel):
+    sections: list[SectionSave]
+
+    _validate_image_input_indexes = validator("sections", pre=True)(
+        validate_input_indexes
+    )
 
 class Section(SectionBase):
     id: int
