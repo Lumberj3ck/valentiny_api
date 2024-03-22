@@ -17,6 +17,8 @@ Use integer keys as string on front
 
 Realy hash passwords!
 
+- [ ] Change save json api endpoint now instead of list of sections dict of sections: list
+
 
 When user and sections just created then we need to either make second 
 api call to fetch id of instance so then if user makes additional sections

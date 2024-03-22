@@ -13,6 +13,7 @@ from .app_data.crud import get_user_by_username, get_user_by_email
 from jose import jwt
 from dotenv import load_dotenv
 from pathlib import Path
+from .sections_test_data import *
 
 dotenv_path = Path("app/.env.api")
 load_dotenv(dotenv_path=dotenv_path)
@@ -51,13 +52,13 @@ def db_session():
 client = TestClient(app)
 app.dependency_overrides[get_db] = override_get_db
 
+
 def get_jwt_token_user(jwt_token, db_session):
-    payload = jwt.decode(
-        jwt_token, SECRET_KEY, algorithms=[ALGORITHM]
-    )
+    payload = jwt.decode(jwt_token, SECRET_KEY, algorithms=[ALGORITHM])
     username = payload.get("sub")
     user = get_user_by_username(db_session, username)
     return user
+
 
 def create_user(username, email):
     response = client.post(
@@ -151,6 +152,7 @@ def test_login_token_valid(username, email, db_session):
     user = get_jwt_token_user(jwt_token, db_session)
     assert user
 
+
 def test_login_error():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
@@ -161,23 +163,28 @@ def test_login_error():
             "password": "chimichangas4life",
         },
     )
-    assert response.json() == {'detail': 'Incorrect username or password'}
+    assert response.json() == {"detail": "Incorrect username or password"}
 
 
 def test_get_user_sections_no_authorise():
-    response = client.get('/user/sections/')
-    assert response.json() == {'detail': 'Not authenticated'}
+    response = client.get("/user/sections/")
+    assert response.json() == {"detail": "Not authenticated"}
+
 
 def test_get_registered_user_sections():
-    response = create_user('lumberjack', 'lumberjack@gmail.com')
+    response = create_user("lumberjack", "lumberjack@gmail.com")
     jwt_token = response.json().get("access_token", "")
-    response = client.get('/user/sections/', headers={"Authorization": f"Bearer {jwt_token}"})
+    response = client.get(
+        "/user/sections/", headers={"Authorization": f"Bearer {jwt_token}"}
+    )
     assert response.json() == {}
 
+
+# Continue testing when will fininish testing sections save endpoint
 def test_get_login_user_sections():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    create_user('unique_username', 'unique_username@gmail.com')
+    create_user("unique_username", "unique_username@gmail.com")
     response = client.post(
         "/login",
         json={
@@ -186,5 +193,39 @@ def test_get_login_user_sections():
         },
     )
     jwt_token = response.json().get("access_token", "")
-    response = client.get('/user/sections/', headers={"Authorization": f"Bearer {jwt_token}"})
+    response = client.get(
+        "/user/sections/", headers={"Authorization": f"Bearer {jwt_token}"}
+    )
     assert response.json() == {}
+
+def create_user_and_save_sections(test_data):
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
+    response = create_user("unique_username", "unique_username@gmail.com")
+    jwt_token = response.json().get("access_token", "")
+    response = client.put(
+        "/save_sections/",
+        headers={"Authorization": f"Bearer {jwt_token}"},
+        json={"sections": test_data},
+    )
+    return response
+
+@pytest.mark.parametrize('test_data', [test_data, incomplete_sections_data, []])
+def test_create_sections_successfully(test_data):
+    sections_save_response = create_user_and_save_sections(test_data)
+    assert sections_save_response.json() == {'message': 'Saved successfully'}
+
+@pytest.mark.parametrize('test_data', [sections_data_no_unique_index, sections_data_no_unique_image_index])
+def test_create_sections_index_not_unique(test_data):
+    sections_save_response = create_user_and_save_sections(test_data)
+    error = 'Value error, Input indexes must be unique within a section'
+    assert sections_save_response.json()['detail'][0]['msg'] == error
+
+def test_create_section_with_existed_name():
+    sections_save_response = create_user_and_save_sections(sections_data_with_same_name)
+    assert sections_save_response.json() == {'detail': 'Section with such name is already exists!'}
+
+
+# def test_update_sections():
+#     sections_save_response = create_user_and_save_sections()
+#     assert sections_save_response.json() == {'message': 'Saved successfully'}

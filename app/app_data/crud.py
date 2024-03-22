@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from . import models, schemas
-from ..custom_exceptions import NoDBInstance, WrongSectionID, UserNonExists
+from ..custom_exceptions import NoDBInstance, WrongSectionID, UserNonExists, DBInstanceExists
 from ..utils.password_security import get_password_hash
 
 
@@ -136,7 +136,7 @@ def update_section(
         raise WrongSectionID
 
     for field, value in section.dict().items():
-        print(field, value)
+        # print(field, value)
         if field in ("text_inputs", "image_inputs"):
             continue
         setattr(db_section, field, value)
@@ -163,7 +163,7 @@ def create_section(
         raise UserNonExists
 
     if db_section_check:
-        raise NoDBInstance
+        raise DBInstanceExists
 
     db_section = models.Section(
         index=section.index,
