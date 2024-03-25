@@ -1,7 +1,12 @@
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from . import models, schemas
-from ..custom_exceptions import NoDBInstance, WrongSectionID, UserNonExists, DBInstanceExists
+from ..custom_exceptions import (
+    NoDBInstance,
+    WrongSectionID,
+    UserNonExists,
+    DBInstanceExists,
+)
 from ..utils.password_security import get_password_hash
 
 
