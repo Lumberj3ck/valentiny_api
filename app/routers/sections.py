@@ -5,10 +5,21 @@ from fastapi import APIRouter
 from ..dependencies import get_current_user, get_db
 from ..app_data import crud
 from fastapi import Depends, HTTPException
-from ..app_data.schemas import User, Section, UserAuthenticate, SectionSave, SectionSaveList
+from ..app_data.schemas import (
+    User,
+    Section,
+    UserAuthenticate,
+    SectionSave,
+    SectionSaveList,
+)
 from sqlalchemy.orm import Session
 from ..utils.data_mutate import transform_sections
-from ..custom_exceptions import NoDBInstance, UserNonExists, WrongSectionID, DBInstanceExists
+from ..custom_exceptions import (
+    NoDBInstance,
+    UserNonExists,
+    WrongSectionID,
+    DBInstanceExists,
+)
 
 # from ..app_data.schemas import TextInput
 
@@ -60,9 +71,7 @@ def save_sections(
     return {"message": "Saved successfully"}
 
 
-def update_user_section(
-    db: Session, section: SectionSave, user: UserAuthenticate
-):
+def update_user_section(db: Session, section: SectionSave, user: UserAuthenticate):
     try:
         crud.update_section(db, section, user)
     except NoDBInstance:
@@ -76,9 +85,7 @@ def update_user_section(
         )
 
 
-def create_user_section(
-    db: Session, section: SectionSave, user: UserAuthenticate
-):
+def create_user_section(db: Session, section: SectionSave, user: UserAuthenticate):
     try:
         crud.create_section(db, section, user)
     except DBInstanceExists:
