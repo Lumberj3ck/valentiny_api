@@ -15,6 +15,7 @@ def transform_sections(sections):
     sections_dict = {section.name: section for section in sections}
     return sections_dict
 
+
 def reset_sections_state_with_id(sections):
     sections_list = []
     for section in sections:
@@ -32,6 +33,7 @@ def reset_sections_state_with_id(sections):
 
         sections_list.append(section_data)
     return sections_list
+
 
 def reset_sections_state(sections):
     sections_list = []
