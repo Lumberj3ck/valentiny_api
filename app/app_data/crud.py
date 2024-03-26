@@ -140,7 +140,7 @@ def update_section(
     if db_section.user_id != user.id:
         raise WrongSectionID
 
-    for field, value in section.dict().items():
+    for field, value in section.model_dump().items():
         # print(field, value)
         if field in ("text_inputs", "image_inputs"):
             continue
