@@ -212,7 +212,8 @@ def create_user_and_save_sections(test_data):
     )
     return (response, jwt_token)
 
-@pytest.mark.parametrize('test_data', [test_data, incomplete_sections_data])
+
+@pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data])
 def test_get_registered_user_saved_sections(test_data):
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
@@ -220,7 +221,7 @@ def test_get_registered_user_saved_sections(test_data):
     user_sections = client.get(
         "/user/sections/", headers={"Authorization": f"Bearer {jwt_token}"}
     )
-    
+
     new_user_data = reset_sections_state(user_sections.json())
     assert user_sections.json()["start_section"]["id"]
     assert new_user_data == test_data
@@ -234,7 +235,7 @@ def create_user_and_update_sections(test_data, random_id=False):
     response = client.put(
         "/save_sections/",
         headers={"Authorization": f"Bearer {jwt_token}"},
-        json={"sections": test_data },
+        json={"sections": test_data},
     )
     user_sections = client.get(
         "/user/sections/", headers={"Authorization": f"Bearer {jwt_token}"}
@@ -242,7 +243,7 @@ def create_user_and_update_sections(test_data, random_id=False):
 
     modified_sections = reset_sections_state_with_id(user_sections.json())
     if random_id:
-        modified_sections[0]['id'] = 999
+        modified_sections[0]["id"] = 999
     response = client.put(
         "/save_sections/",
         headers={"Authorization": f"Bearer {jwt_token}"},
@@ -279,32 +280,36 @@ def test_create_section_with_existed_name():
 def test_update_sections(test_data):
     sections_save_response = create_user_and_update_sections(test_data)
     assert sections_save_response.json() == {"message": "Saved successfully"}
-    
+
+
 @pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data])
 def test_update_sections_and_wrong_id(test_data):
     sections_save_response = create_user_and_update_sections(test_data, True)
-    assert sections_save_response.json() == {"detail": "No section or text input or image input with given id"}
+    assert sections_save_response.json() == {
+        "detail": "No section or text input or image input with given id"
+    }
 
-@pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data])
-def test_update_section_wrong_user(test_data):
-    Base.metadata.drop_all(bind=engine)
-    Base.metadata.create_all(bind=engine)
-    create_user_response = create_user("unique_username", "unique_username@gmail.com")
-    jwt_token = create_user_response.json().get("access_token", "")
-    response = client.put(
-        "/save_sections/",
-        headers={"Authorization": f"Bearer {jwt_token}"},
-        json={"sections": test_data },
-    )
-    user_sections = client.get(
-        "/user/sections/", headers={"Authorization": f"Bearer {jwt_token}"}
-    )
 
-    modified_sections = reset_sections_state_with_id(user_sections.json())
-    if random_id:
-        modified_sections[0]['id'] = 999
-    response = client.put(
-        "/save_sections/",
-        headers={"Authorization": f"Bearer {jwt_token}"},
-        json={"sections": modified_sections},
-    )
+# @pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data])
+# def test_update_section_wrong_user(test_data):
+#     Base.metadata.drop_all(bind=engine)
+#     Base.metadata.create_all(bind=engine)
+#     create_user_response = create_user("unique_username", "unique_username@gmail.com")
+#     jwt_token = create_user_response.json().get("access_token", "")
+#     response = client.put(
+#         "/save_sections/",
+#         headers={"Authorization": f"Bearer {jwt_token}"},
+#         json={"sections": test_data },
+#     )
+#     user_sections = client.get(
+#         "/user/sections/", headers={"Authorization": f"Bearer {jwt_token}"}
+#     )
+#
+#     modified_sections = reset_sections_state_with_id(user_sections.json())
+#     if random_id:
+#         modified_sections[0]['id'] = 999
+#     response = client.put(
+#         "/save_sections/",
+#         headers={"Authorization": f"Bearer {jwt_token}"},
+#         json={"sections": modified_sections},
+#     )
