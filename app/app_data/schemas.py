@@ -1,14 +1,12 @@
-from pydantic import BaseModel
-from enum import Enum
+from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import datetime
-from pydantic import validator
 
 
 class UserCredentials(BaseModel):
     username: str | None = None
     password: str | None = None
 
-    @validator("username")
+    @field_validator("username")
     def convert_username_to_lower(cls, v):
         return v.lower().strip()
 
@@ -26,11 +24,11 @@ class UserBase(BaseModel):
     username: str
     email: str
 
-    @validator("username")
+    @field_validator("username")
     def convert_username_to_lower(cls, v):
         return v.lower().strip()
 
-    @validator("email")
+    @field_validator("email")
     def convert_email_to_lower(cls, v):
         return v.lower().strip()
 
@@ -46,9 +44,10 @@ class UserAuthenticate(UserBase):
 class User(UserBase):
     id: int
     created_at: datetime | None
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
 class TextInput(BaseModel):
@@ -72,11 +71,6 @@ class ImageInput(BaseModel):
 #     id: int | None = None
 
 
-class SectionNames(Enum):
-    start_section = "start_section"
-    like_you_section = "like_you_section"
-    reasons_like_you_section = "reasons_like_you_section"
-
 
 def validate_input_indexes(v):
     if v is not None:
@@ -99,21 +93,23 @@ class SectionSave(SectionBase):
     image_inputs: list[ImageInput] | None = None
     text_inputs: list[TextInput] | None = None
 
-    _validate_text_input_indexes = validator("text_inputs", pre=True)(
+    model_config = ConfigDict(from_attributes=True)
+
+    _validate_text_input_indexes = field_validator("text_inputs", mode='before')(
         validate_input_indexes
     )
-    _validate_image_input_indexes = validator("image_inputs", pre=True)(
+    _validate_image_input_indexes = field_validator("image_inputs", mode='before')(
         validate_input_indexes
     )
 
-    class Config:
-        orm_mode = True
+    # class Config:
+    #     orm_mode = True
 
 
 class SectionSaveList(BaseModel):
     sections: list[SectionSave]
 
-    _validate_image_input_indexes = validator("sections", pre=True)(
+    _validate_image_input_indexes = field_validator("sections", mode='before')(
         validate_input_indexes
     )
 
@@ -124,5 +120,7 @@ class Section(SectionBase):
     image_inputs: dict[int, ImageInput] | None = None
     text_inputs: dict[int, TextInput] | None = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
+
+    # class Config:
+    #     orm_mode = True
