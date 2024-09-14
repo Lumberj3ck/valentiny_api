@@ -52,3 +52,4 @@ Whenever user logins frontend should send a request to a api user sections
 2. Fix some api routes to proper forms like /user/sections
 3. Think about two cases on frontend when upload 1. Request entity is too large 2. 
 4. Remove local host from cors origins
+5. Add a limit for image size in nginx production
