@@ -23,7 +23,7 @@ BUCKET_NAME = os.getenv('AWS_BUCKET')
 
 @router.post("/upload_image/")
 async def upload_image(
-    user: Annotated[User, Depends(get_current_user)],
+    # user: Annotated[User, Depends(get_current_user)],
     file: UploadFile = File(...)
 ):
     if not file.filename:
@@ -31,9 +31,8 @@ async def upload_image(
 
     await file.seek(0)
     content = await file.read()
-    print("Uploading image")
 
-    max_content_size = 25 * 1024 * 1024  
+    max_content_size = 5 * 1024 * 1024  
     if len(content) > max_content_size:
         raise HTTPException(status_code=413, detail="Entity too Large")
     import re
@@ -47,7 +46,7 @@ async def upload_image(
 
     import time
     timestamp = int(time.time())
-    unique_filename = f"{user.id}_{timestamp}_{file.filename}"
+    unique_filename = f"{timestamp}_{file.filename}"
 
     try:
         s3_client.put_object(
