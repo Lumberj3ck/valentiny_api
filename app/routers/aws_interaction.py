@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import Annotated
 from ..dependencies import get_current_user
@@ -14,8 +14,8 @@ load_dotenv()
 
 s3_client = boto3.client(
     's3',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_KEY'),
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
     region_name=os.getenv('AWS_REGION')
 )
 
@@ -29,8 +29,7 @@ async def upload_image(
     await file.seek(0)
     content = await file.read()
 
-    print(content)
-    max_content_size = 50 * 1024 * 1024  
+    max_content_size = 25 * 1024 * 1024  
     if len(content) > max_content_size:
         raise HTTPException(status_code=400, detail="File size should be less than 50 MB")
 
