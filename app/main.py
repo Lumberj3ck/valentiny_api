@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .routers import sections, users
+from .routers import sections, users, aws_interaction
 from .app_data import models, database
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,3 +25,5 @@ app.add_middleware(
 
 app.include_router(sections.router)
 app.include_router(users.router)
+app.include_router(aws_interaction.router)
+
