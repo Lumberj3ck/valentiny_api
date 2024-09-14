@@ -47,3 +47,5 @@ will seek for bearer jwt token in headers
 
 
 Whenever user logins frontend should send a request to a api user sections 
+
+1. 
