@@ -50,4 +50,5 @@ Whenever user logins frontend should send a request to a api user sections
 
 1. Work with jwt toke expiration datas on frontend 
 2. Fix some api routes to proper forms like /user/sections
-3. Think about two cases on frontend when upload 1. Request entity is too large 2.  
+3. Think about two cases on frontend when upload 1. Request entity is too large 2. 
+4. Remove local host from cors origins
