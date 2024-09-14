@@ -31,9 +31,8 @@ async def upload_image(
 
     max_content_size = 25 * 1024 * 1024  
     if len(content) > max_content_size:
-        raise HTTPException(status_code=400, detail="File size should be less than 50 MB")
+        raise HTTPException(status_code=413, detail="Entity too Large")
 
-    file_extension = os.path.splitext(file.filename)[1]
     unique_filename = f"{user.id}_{file.filename}"
 
     try:
