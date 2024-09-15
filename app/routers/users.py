@@ -42,11 +42,10 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
 #     user = crud.get_user(db, user_id)
 #     return user
 
-from app.app_data.schemas import User
-@router.get("/users", response_model=list[User])
-def get_users(db: Session = Depends(get_db)):
-    users = crud.get_users(db)
-    return users
+# @router.get("/users", response_model=list[User])
+# def get_users(db: Session = Depends(get_db)):
+#     users = crud.get_users(db)
+#     return users
 
 
 @router.post("/login/")
