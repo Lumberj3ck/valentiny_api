@@ -20,8 +20,8 @@ services:
 
   web:
     build: .
-    ports:
-      - 8000:80
+    expose:
+      - 80
     depends_on:
       - db
 
