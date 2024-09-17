@@ -1,8 +1,8 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import Annotated
-from ..dependencies import get_current_user
-from ..app_data.schemas import User
+from ..dependencies import get_s3_client
+# from ..app_data.schemas import User
 import boto3
 from botocore.exceptions import ClientError
 import os
@@ -12,18 +12,18 @@ router = APIRouter()
 
 load_dotenv()
 
-s3_client = boto3.client(
-    's3',
-    aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
-    aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
-    region_name=os.getenv('AWS_REGION')
-)
+# s3_client = boto3.client(
+#     's3',
+#     aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+#     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+#     region_name=os.getenv('AWS_REGION')
+# )
 
 BUCKET_NAME = os.getenv('AWS_BUCKET')
 
 @router.post("/upload_image/")
 async def upload_image(
-    # user: Annotated[User, Depends(get_current_user)],
+    s3_client: boto3.client = Depends(get_s3_client),
     file: UploadFile = File(...)
 ):
     if not file.filename:
