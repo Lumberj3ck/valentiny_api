@@ -115,7 +115,7 @@ def test_login_token_valid(username, email, db_session):
     Base.metadata.create_all(bind=engine)
     create_user(username, email)
     response = client.post(
-        "/login",
+        "/user/login",
         json={
             "username": username,
             "password": "chimichangas4life",
@@ -130,7 +130,7 @@ def test_login_error():
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     response = client.post(
-        "/login",
+        "/user/login",
         json={
             "username": "lumberjack",
             "password": "chimichangas4life",
@@ -159,7 +159,7 @@ def test_get_login_user_sections():
     Base.metadata.create_all(bind=engine)
     create_user("unique_username", "unique_username@gmail.com")
     response = client.post(
-        "/login",
+        "/user/login",
         json={
             "username": "unique_username",
             "password": "chimichangas4life",

@@ -54,3 +54,4 @@ Whenever user logins frontend should send a request to a api user sections
 4. Remove local host from cors origins
 5. Add a limit for image size in nginx production
 6. Add a cors when nginx block request with 413
+7. Add login with email
