@@ -44,6 +44,18 @@ def get_jwt_token_user(jwt_token, db_session):
     user = get_user_by_username(db_session, username)
     return user
 
+def login_and_get_user(username, db_session):
+    response = client.post(
+        "/user/login",
+        json={
+            "username": username,
+            "password": "chimichangas4life",
+        },
+    )
+    jwt_token = response.json().get("access_token", "")
+    user = get_jwt_token_user(jwt_token, db_session)
+    return user
+
 
 def test_first_endpoint():
     response = client.get("/")
@@ -114,16 +126,9 @@ def test_login_token_valid(username, email, db_session):
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     create_user(username, email)
-    response = client.post(
-        "/user/login",
-        json={
-            "username": username,
-            "password": "chimichangas4life",
-        },
-    )
-    jwt_token = response.json().get("access_token", "")
-    user = get_jwt_token_user(jwt_token, db_session)
-    assert user
+    for login_credetial in [email, username]:
+        user = login_and_get_user(login_credetial, db_session)
+        assert user
 
 
 def test_login_error():
