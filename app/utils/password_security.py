@@ -1,5 +1,6 @@
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from ..app_data.schemas import UserBase
 from ..app_data import crud
 
 
@@ -15,7 +16,8 @@ def verify_password(plain_password: str, hashed_password: str):
 
 
 def authenticate_user(db: Session, username: str, password: str):
-    user = crud.get_user_by_username(db, username)
+    # user = crud.get_user_by_username(db, username)
+    user = crud.get_user_by_email_or_username(db, UserBase(username=username, email=username))
     if not user:
         return False
     if not verify_password(password, user.password):

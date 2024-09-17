@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta, timezone
 from .app_data import crud
 import os
+import boto3
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -23,6 +24,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def get_s3_client():
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+        aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
+        region_name=os.getenv('AWS_REGION')
+    )
+    return s3_client
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

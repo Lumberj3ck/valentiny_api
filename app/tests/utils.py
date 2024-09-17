@@ -8,7 +8,7 @@ client = TestClient(app)
 
 def create_user(username, email):
     response = client.post(
-        "/users/create_user",
+        "/user/create_user",
         json={
             "username": username,
             "email": email,
@@ -24,7 +24,7 @@ def create_user_and_save_sections(test_data):
     create_user_response = create_user("unique_username", "unique_username@gmail.com")
     jwt_token = create_user_response.json().get("access_token", "")
     response = client.put(
-        "/save_sections/",
+        "/user/save_sections/",
         headers={"Authorization": f"Bearer {jwt_token}"},
         json={"sections": test_data},
     )
@@ -37,7 +37,7 @@ def create_user_and_update_sections(test_data, random_id=False):
     create_user_response = create_user("unique_username", "unique_username@gmail.com")
     jwt_token = create_user_response.json().get("access_token", "")
     response = client.put(
-        "/save_sections/",
+        "/user/save_sections/",
         headers={"Authorization": f"Bearer {jwt_token}"},
         json={"sections": test_data},
     )
@@ -49,7 +49,7 @@ def create_user_and_update_sections(test_data, random_id=False):
     if random_id:
         modified_sections[0]["id"] = 999
     response = client.put(
-        "/save_sections/",
+        "/user/save_sections/",
         headers={"Authorization": f"Bearer {jwt_token}"},
         json={"sections": modified_sections},
     )

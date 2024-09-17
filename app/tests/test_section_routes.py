@@ -81,7 +81,7 @@ def test_update_sections_and_wrong_id(test_data):
 #     create_user_response = create_user("unique_username", "unique_username@gmail.com")
 #     jwt_token = create_user_response.json().get("access_token", "")
 #     response = client.put(
-#         "/save_sections/",
+#         "/user/save_sections/",
 #         headers={"Authorization": f"Bearer {jwt_token}"},
 #         json={"sections": test_data },
 #     )
@@ -93,7 +93,7 @@ def test_update_sections_and_wrong_id(test_data):
 #     if random_id:
 #         modified_sections[0]['id'] = 999
 #     response = client.put(
-#         "/save_sections/",
+#         "/user/save_sections/",
 #         headers={"Authorization": f"Bearer {jwt_token}"},
 #         json={"sections": modified_sections},
 #     )
