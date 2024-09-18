@@ -6,6 +6,7 @@ services:
     ports:
       - 80:80
       - 443:443
+    restart: on-failure
     volumes:
       - ./certbot/www:/var/www/certbot/:ro
       - ./certbot/conf/:/etc/nginx/ssl/:ro
@@ -22,6 +23,7 @@ services:
     build: .
     expose:
       - 80
+    restart: on-failure
     depends_on:
       - db
 
@@ -29,6 +31,7 @@ services:
     image: postgres:15-alpine
     env_file:
       - app/.env
+    restart: on-failure
     volumes:
       - postgres_data_prod:/var/lib/postgresql/data/
     ports:
