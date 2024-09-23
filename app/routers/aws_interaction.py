@@ -67,9 +67,10 @@ async def upload_image(
         if e.response['Error']['Code'] != '404':
             raise HTTPException(status_code=500, detail="Error checking file existence")
 
-    appropriate_content_type = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff", "image/ico", "image/ppm"]
+    appropriate_content_type = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff", "image/ico", "image/ppm", "image/x-icon"]
     buf_img = io.BytesIO(content)
     webp_img_buf = io.BytesIO()
+    print("File content type --------------", file.content_type)
 
     if file.content_type in appropriate_content_type:
         if file.content_type != "image/webp":

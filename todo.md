@@ -61,3 +61,4 @@ Whenever user logins frontend should send a request to a api user sections
 10. Add more image types for img up
 11. Validate the file ext error on the front
 12. Think about reseting the cache after publishing the website again
+13. See whatsup with ico files when upload
