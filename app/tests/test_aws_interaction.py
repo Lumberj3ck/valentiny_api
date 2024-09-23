@@ -25,14 +25,12 @@ app.dependency_overrides[get_s3_client] = mock_s3_client
 client = TestClient(app)
 
 def test_upload_image():
-    image_content = b"fake image content"
-    image = io.BytesIO(image_content)
-
-    unique_filename = f"test_image_name"
-    response = client.post(
-        "/upload_image/",
-        files={"file": (unique_filename, image, "image/jpeg")}
-    )
+    with open("./app/tests/test_data/8.jpg", "rb") as image:
+        unique_filename = f"test_image_name"
+        response = client.post(
+            "/upload_image/",
+            files={"file": (unique_filename, image, "image/jpeg")}
+        )
 
     assert response.status_code == 200
     assert "url" in response.json()
@@ -54,14 +52,49 @@ def test_upload_image_too_large():
 def test_upload_image_error():
     app.dependency_overrides[get_s3_client] = mock_s3_client_put_object_error
 
-    image_content = b"fake image content"
-    image = io.BytesIO(image_content)
-
-    unique_filename = f"test_image_name"
-    response = client.post(
-        "/upload_image/",
-        files={"file": (unique_filename, image, "image/jpeg")}
-    )
+    with open("./app/tests/test_data/8.jpg", "rb") as image:
+        unique_filename = f"test_image_name"
+        response = client.post(
+            "/upload_image/",
+            files={"file": (unique_filename, image, "image/jpeg")}
+        )
 
     assert response.status_code == 500
     assert mock_client.put_object.call_count == 1
+
+def test_upload_image_invalid_extension():
+    with open("./app/tests/test_data/8.jpg", "rb") as image:
+        unique_filename = f"test_image_name.txt"
+        response = client.post(
+            "/upload_image/",
+            files={"file": (unique_filename, image, "text/plain")}
+        )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Invalid file extension"
+
+def test_upload_image_duplicate_filename():
+    mock_client.reset_mock()
+    app.dependency_overrides[get_s3_client] = mock_s3_client
+
+    with open("./app/tests/test_data/8.jpg", "rb") as image:
+        unique_filename = f"test_image_name"
+        response = client.post(
+            "/upload_image/",
+            files={"file": (unique_filename, image, "image/jpeg")}
+        )
+
+    assert response.status_code == 200
+    assert "url" in response.json()
+    assert mock_client.put_object.call_count == 1
+
+    # Try uploading the same file again to trigger the duplicate filename logic
+    with open("./app/tests/test_data/8.jpg", "rb") as image:
+        response = client.post(
+            "/upload_image/",
+            files={"file": (unique_filename, image, "image/jpeg")}
+        )
+
+    assert response.status_code == 200
+    assert "url" in response.json()
+    assert mock_client.put_object.call_count == 2
