@@ -15,6 +15,11 @@ from ..dependencies import get_current_user
 from ..app_data.schemas import User
 from fastapi import Form
 
+    
+from PIL import Image
+import io
+import re
+
 router = APIRouter()
 
 load_dotenv()
@@ -28,67 +33,6 @@ load_dotenv()
 
 IMAGE_BUCKET_NAME = os.getenv('AWS_BUCKET')
 WEBSITE_BUCKET_NAME = os.getenv('AWS_WEBSITE_BUCKET')
-# from PIL import Image
-# import io
-
-
-
-# @router.post("/upload_image/")
-# async def upload_image(
-#     s3_client: boto3.client = Depends(get_s3_client),
-#     file: UploadFile = File(...)
-# ):
-#     if not file.filename:
-#         raise HTTPException(status_code=400, detail="No file provided")
-
-#     await file.seek(0)
-#     content = await file.read()
-
-#     max_content_size = 5 * 1024 * 1024  
-#     if len(content) > max_content_size:
-#         raise HTTPException(status_code=413, detail="Entity too Large")
-#     import re
-
-#     sanitized_filename = re.sub(r'[^a-zA-Z0-9._-]', '', file.filename)
-    
-#     if not sanitized_filename:
-#         raise HTTPException(status_code=400, detail="Invalid filename after sanitization")
-
-#     file.filename = sanitized_filename
-#     appropriate_content_type = ["jpg", "png"] 
-
-#     buf_img = io.BytesIO(content) 
-#     webp_img_buf = io.BytesIO()
-
-#     if file.content_type in appropriate_content_type:
-#         with Image.open(buf_img) as img:
-#             img.save(webp_img_buf, format="webp")
-#     elif file.content_type == "webp":
-#         webp_img_buf.write(content)
-#     else:
-#         raise HTTPException(status_code=400, detail="Invalid file extension")
-    
-
-#     import time
-#     timestamp = int(time.time())
-#     unique_filename = f"{timestamp}_{file.filename}"
-
-#     try:
-#         s3_client.put_object(
-#             Bucket=BUCKET_NAME,
-#             Key=unique_filename,
-#             Body=webp_img_buf.getvalue(),
-#             ContentType='webp'
-#         )
-
-
-#         url = f"https://{BUCKET_NAME}.s3.amazonaws.com/{unique_filename}"
-
-#         return JSONResponse(content={"url": url}, status_code=200)
-
-#     except ClientError as e:
-#         print(e)
-#         raise HTTPException(status_code=500, detail="Failed to upload image")
 
 
 @router.post("/upload_image/")
@@ -105,25 +49,47 @@ async def upload_image(
     max_content_size = 5 * 1024 * 1024  
     if len(content) > max_content_size:
         raise HTTPException(status_code=413, detail="Entity too Large")
-    import re
 
-    sanitized_filename = re.sub(r'[^a-zA-Z0-9._-]', '', file.filename)
+    sanitized_filename = re.sub(r'[^a-zA-Z0-9._\-<>]', '', file.filename.replace('/', ''))
     
     if not sanitized_filename:
         raise HTTPException(status_code=400, detail="Invalid filename after sanitization")
-
     file.filename = sanitized_filename
 
-    import time
-    timestamp = int(time.time())
-    unique_filename = f"{timestamp}_{file.filename}"
+    unique_filename = file.filename
+
+    try:
+        s3_client.head_object(Bucket=IMAGE_BUCKET_NAME, Key=unique_filename)
+        import time
+        timestamp = int(time.time())
+        unique_filename = f"{timestamp}_{file.filename}"
+    except ClientError as e:
+        if e.response['Error']['Code'] != '404':
+            raise HTTPException(status_code=500, detail="Error checking file existence")
+
+    appropriate_content_type = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff", "image/ico", "image/ppm"]
+    buf_img = io.BytesIO(content)
+    webp_img_buf = io.BytesIO()
+
+    if file.content_type in appropriate_content_type:
+        if file.content_type != "image/webp":
+            with Image.open(buf_img) as img:
+                img.save(webp_img_buf, format="webp")
+        else:
+            webp_img_buf.write(content)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid file extension")
+
+    content = webp_img_buf.getvalue()
+    file_content_type = "image/webp"
+
 
     try:
         s3_client.put_object(
             Bucket=IMAGE_BUCKET_NAME,
             Key=unique_filename,
             Body=content,
-            ContentType=file.content_type
+            ContentType=file_content_type
         )
 
 
