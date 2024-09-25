@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
+from sqlalchemy.schema import UniqueConstraint
 from .database import Base
 import datetime
 
@@ -13,7 +14,7 @@ class User(Base):
     email = Column(String, unique=True)
     password = Column(String)
     sections = relationship("Section", back_populates="user")
-
+    subdomains = relationship("Subdomain", back_populates="user")
 
 class Section(Base):
     __tablename__ = "sections"
@@ -54,3 +55,29 @@ class ImageInput(Base):
         Integer, ForeignKey("sections.id", ondelete="CASCADE"), nullable=False
     )
     section = relationship("Section", back_populates="image_inputs")
+
+class Subdomain(Base):
+    __tablename__ = "subdomains"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    domain_id = Column(
+        Integer, ForeignKey("domains.id", ondelete="CASCADE"), nullable=False
+    )
+    domain = relationship("Domain", back_populates="subdomains")
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+    user = relationship("User", back_populates="subdomains")
+    created_at = Column(DateTime, default=datetime.datetime.now)
+
+    __table_args__ = (UniqueConstraint('name', 'domain_id', name='uq_subdomain_name_domain'),)
+
+
+class Domain(Base):
+    __tablename__ = "domains"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, unique=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    subdomains = relationship("Subdomain", back_populates="domain")

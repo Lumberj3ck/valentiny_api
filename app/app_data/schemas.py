@@ -124,3 +124,15 @@ class Section(SectionBase):
 
     # class Config:
     #     orm_mode = True
+
+
+class SubdomainCreate(BaseModel):
+    name: str
+    domain_name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SubdomainAvailability(BaseModel):
+    is_available: bool
+    message: str

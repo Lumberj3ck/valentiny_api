@@ -194,3 +194,12 @@ def create_section(
                 index=image_input.index, link=image_input.link, section_id=db_section.id
             )
             save_and_refresh(db, db_image_input)
+
+def get_user_subdomains(db: Session, user_id: int):
+    return db.query(models.Subdomain).filter(models.Subdomain.user_id == user_id).all()
+
+def get_subdomain_by_name_and_domain(db: Session, subdomain_name: str, domain_name: str):
+    return db.query(models.Subdomain).join(models.Domain).filter(
+        models.Subdomain.name == subdomain_name,
+        models.Domain.name == domain_name
+    ).first()
