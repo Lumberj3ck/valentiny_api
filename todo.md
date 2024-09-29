@@ -62,3 +62,4 @@ Whenever user logins frontend should send a request to a api user sections
 11. Validate the file ext error on the front
 12. Think about reseting the cache after publishing the website again
 13. See whatsup with ico files when upload
+14. Add a domains on the server remove add domain endpoint 

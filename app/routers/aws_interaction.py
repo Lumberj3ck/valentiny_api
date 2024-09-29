@@ -1,19 +1,20 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends, Form
 from fastapi.responses import JSONResponse
 from typing import Annotated
 from ..dependencies import get_s3_client
-# from ..app_data.schemas import User
 import boto3
 from botocore.exceptions import ClientError
 import os
 from dotenv import load_dotenv
+from ..app_data.schemas import UserAuthenticate
+from ..app_data import crud, schemas
+from sqlalchemy.orm import Session
+from ..dependencies import get_db
 
 import io
 import zipfile
 import mimetypes
 from ..dependencies import get_current_user
-from ..app_data.schemas import User
-from fastapi import Form
 
     
 from PIL import Image
@@ -70,7 +71,6 @@ async def upload_image(
     appropriate_content_type = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp", "image/tiff", "image/ico", "image/ppm", "image/x-icon"]
     buf_img = io.BytesIO(content)
     webp_img_buf = io.BytesIO()
-    print("File content type --------------", file.content_type)
 
     if file.content_type in appropriate_content_type:
         if file.content_type != "image/webp":
@@ -103,73 +103,75 @@ async def upload_image(
         raise HTTPException(status_code=500, detail="Failed to upload image")
 
 
+@router.post("/user/upload_website/")
+async def upload_website(
+    current_user: Annotated[UserAuthenticate, Depends(get_current_user)],
+    subdomain_name: str = Form(...),
+    domain_name: str = Form(...),
+    s3_client: boto3.client = Depends(get_s3_client),
+    db: Session = Depends(get_db),
+    zip_file: UploadFile = File(...),
+):
+    subdomain = schemas.SubdomainCreate(name=subdomain_name, domain_name=domain_name)
+    if not zip_file.filename.endswith('.zip'):
+        raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP archive")
 
-# We need to check by our database if the current user created a website where 
-# he wants to upload the files to.
-# if not create a db entry for him.
-# @router.post("/upload_website_zip/")
-# async def upload_website_zip(
-#     s3_client: boto3.client = Depends(get_s3_client),
-#     current_user: User = Depends(get_current_user),
-#     folder_name: str = Form(...),
-#     zip_file: UploadFile = File(...)
-# ):
-#     if not current_user:
-#         raise HTTPException(status_code=401, detail="User not authenticated")
+    domain = crud.get_domain_by_name(db, domain_name)
+    if not domain:
+        raise HTTPException(status_code=400, detail="The specified domain does not exist")
 
-#     if not zip_file.filename.endswith('.zip'):
-#         raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP archive")
+    existing_subdomain = crud.get_subdomain_by_name_and_domain(db, subdomain.name, subdomain.domain_name)
+    if existing_subdomain:
+        if existing_subdomain.user_id != current_user.id:
+            raise HTTPException(status_code=400, detail="This subdomain is not available")
+        folder_name = f"{subdomain.name}"
+    else:
+        new_subdomain = crud.create_subdomain(db, current_user.id, subdomain.name, subdomain.domain_name)
+        folder_name = f"{new_subdomain.name}"
 
-#     try:
-#         s3_client.head_object(Bucket=WEBSITE_BUCKET_NAME, Key=f"{folder_name}/")
-#         raise HTTPException(status_code=400, detail="Folder already exists")
-#     except ClientError as e:
-#         if e.response['Error']['Code'] != '404':
-#             raise HTTPException(status_code=500, detail="Error checking folder existence")
+    try:
+        s3_client.head_object(Bucket=WEBSITE_BUCKET_NAME, Key=f"{folder_name}/")
+        # If the folder exists, we'll update it
+    except ClientError as e:
+        if e.response['Error']['Code'] != '404':
+            raise HTTPException(status_code=500, detail="Error checking folder existence")
 
-#     uploaded_files = []
+    uploaded_files = []
 
-#     # Read the zip file content into memory
-#     zip_content = await zip_file.read()
-#     zip_io = io.BytesIO(zip_content)
+    zip_content = await zip_file.read()
+    zip_io = io.BytesIO(zip_content)
 
-#     # Open the zip file from memory
-#     with zipfile.ZipFile(zip_io, 'r') as zip_ref:
-#         # Iterate through the files in the zip
-#         for file_info in zip_ref.infolist():
-#             if file_info.filename.endswith('/'):  # Skip directories
-#                 continue
+    with zipfile.ZipFile(zip_io, 'r') as zip_ref:
+        for file_info in zip_ref.infolist():
+            if file_info.filename.endswith('/'):  
+                continue
 
-#             # Read the file content
-#             with zip_ref.open(file_info) as file:
-#                 file_content = file.read()
+            with zip_ref.open(file_info) as file:
+                file_content = file.read()
 
-#             # Determine the content type
-#             content_type, _ = mimetypes.guess_type(file_info.filename)
-#             if content_type is None:
-#                 content_type = 'application/octet-stream'
+            content_type, _ = mimetypes.guess_type(file_info.filename)
+            if content_type is None:
+                content_type = 'application/octet-stream'
 
-#             # Remove leading slashes and normalize the path
-#             normalized_filename = os.path.normpath(file_info.filename.lstrip('/'))
+            normalized_filename = os.path.normpath(file_info.filename.lstrip('/'))
             
-#             # Upload the file to S3
-#             file_key = f"{folder_name}/{normalized_filename}"
-#             try:
-#                 s3_client.put_object(
-#                     Bucket=WEBSITE_BUCKET_NAME,
-#                     Key=file_key,
-#                     Body=file_content,
-#                     ContentType=content_type
-#                 )
-#                 uploaded_files.append(normalized_filename)
-#             except ClientError as e:
-#                 print(f"Error uploading {normalized_filename}: {e}")
+            file_key = f"{folder_name}/{normalized_filename}"
+            
+            try:
+                s3_client.put_object(
+                    Bucket=WEBSITE_BUCKET_NAME,
+                    Key=file_key,
+                    Body=file_content,
+                    ContentType=content_type
+                )
+                uploaded_files.append(normalized_filename)
+            except ClientError as e:
+                print(f"Error uploading {normalized_filename}: {e}")
 
-#     if not uploaded_files:
-#         raise HTTPException(status_code=400, detail="No files were uploaded")
+    if not uploaded_files:
+        raise HTTPException(status_code=400, detail="No files were uploaded")
 
-#     return JSONResponse(content={
-#         "message": "Website folder uploaded successfully",
-#         "folder_name": folder_name,
-#         "uploaded_files": uploaded_files
-#     }, status_code=200)
+    return JSONResponse(content={
+        "message": "Website folder uploaded successfully",
+        "link": f"https://{subdomain.name}.{subdomain.domain_name}",
+    }, status_code=200)

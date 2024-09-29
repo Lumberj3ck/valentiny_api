@@ -203,3 +203,28 @@ def get_subdomain_by_name_and_domain(db: Session, subdomain_name: str, domain_na
         models.Subdomain.name == subdomain_name,
         models.Domain.name == domain_name
     ).first()
+
+def get_domain_by_name(db: Session, domain_name: str):
+    return db.query(models.Domain).filter(models.Domain.name == domain_name).first()
+
+def create_subdomain(db: Session, user_id: int, subdomain_name: str, domain_name: str):
+    domain = get_domain_by_name(db, domain_name)
+    if not domain:
+        raise NoDBInstance
+    
+    new_subdomain = models.Subdomain(
+        name=subdomain_name,
+        user_id=user_id,
+        domain_id=domain.id
+    )
+    save_and_refresh(db, new_subdomain)
+    return new_subdomain
+
+def create_domain(db: Session, domain_name: str):
+    new_domain = models.Domain(
+        name=domain_name
+    )
+    save_and_refresh(db, new_domain)
+    return new_domain
+
+
