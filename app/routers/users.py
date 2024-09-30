@@ -34,21 +34,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
     access_token = create_access_token(
         data={"sub": new_user.username}, expires_delta=access_token_expires
     )
-    # create a plan usage for the user
-    crud.create_plan_usage(db, new_user.id)
     return Token(access_token=access_token, token_type="bearer")
-
-
-# @router.get("/users/{user_id}")
-# async def get_user_handler(user_id: int, db: Session = Depends(get_db)):
-#     user = crud.get_user(db, user_id)
-#     return user
-
-# @router.get("/users", response_model=list[User])
-# def get_users(db: Session = Depends(get_db)):
-#     users = crud.get_users(db)
-#     return users
-
 
 @router.post("/user/login/")
 async def login_for_access_token(
