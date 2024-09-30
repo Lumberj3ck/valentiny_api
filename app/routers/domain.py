@@ -31,15 +31,12 @@ async def check_subdomain_availability(
     
     return {"is_available": True, "message": "This subdomain is available"}
 
-
-# @router.get("/user/domains/", response_model=list[schemas.Domain])
-# async def get_user_domains(
-#     current_user: Annotated[schemas.UserAuthenticate, Depends(get_current_user)],
-#     db: Session = Depends(get_db),
-# ):
-#     user_domains = crud.get_user_domains(db, current_user.id)
-#     return user_domains
-
+@router.get("/user/domains/", response_model=list[schemas.SubdomainCreate])
+async def get_user_domains(
+    current_user: Annotated[schemas.UserAuthenticate, Depends(get_current_user)],
+    db: Session = Depends(get_db)):
+    user_domains = crud.get_user_domains(db, current_user.id)
+    return user_domains
 
 # curl -X POST "http://localhost/admin/add_domain/" \ -H "Content-Type: application/json" \ -d '{"domain": "my-valentine-postcard.site"}'
 from fastapi import Form

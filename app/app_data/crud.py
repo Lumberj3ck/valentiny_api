@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from . import models, schemas
 from ..custom_exceptions import (
     NoDBInstance,
@@ -227,4 +227,14 @@ def create_domain(db: Session, domain_name: str):
     save_and_refresh(db, new_domain)
     return new_domain
 
-
+def get_user_domains(db: Session, user_id: int):
+    result = (
+        db.query(
+            models.Subdomain.name.label('subdomain'),
+            models.Domain.name.label('domain')
+        )
+        .join(models.Subdomain.domain)
+        .filter(models.Subdomain.user_id == user_id)
+        .all()
+    )
+    return [{"name": subdomain, "domain_name": domain} for subdomain, domain in result]
