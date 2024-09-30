@@ -34,6 +34,8 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)) -> Token:
     access_token = create_access_token(
         data={"sub": new_user.username}, expires_delta=access_token_expires
     )
+    # create a plan usage for the user
+    crud.create_plan_usage(db, new_user.id)
     return Token(access_token=access_token, token_type="bearer")
 
 

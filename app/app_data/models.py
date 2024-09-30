@@ -5,16 +5,6 @@ from .database import Base
 import datetime
 
 
-class User(Base):
-    __tablename__ = "users"
-
-    id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True)
-    created_at = Column(DateTime, default=datetime.datetime.now)
-    email = Column(String, unique=True)
-    password = Column(String)
-    sections = relationship("Section", back_populates="user")
-    subdomains = relationship("Subdomain", back_populates="user")
 
 class Section(Base):
     __tablename__ = "sections"
@@ -81,3 +71,36 @@ class Domain(Base):
     name = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.now)
     subdomains = relationship("Subdomain", back_populates="domain")
+
+
+class Plan(Base):
+    __tablename__ = "plans"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String, nullable=False)
+    price = Column(Integer, nullable=False)
+    subdomains_amount = Column(Integer, nullable=False)
+    websites_upload_amount = Column(Integer, nullable=False)
+
+class PlanUsage(Base):
+    __tablename__ = "plan_usage"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    subdomains_count = Column(Integer, nullable=False)
+    websites_upload_count = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user = relationship("User", back_populates="plan_usage")
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, unique=True)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    email = Column(String, unique=True)
+    password = Column(String)
+    sections = relationship("Section", back_populates="user")
+    subdomains = relationship("Subdomain", back_populates="user")
+    plan_id = Column(Integer, ForeignKey("plans.id", ondelete="CASCADE"), nullable=False)
+    plan = relationship("Plan")
+    plan_usage = relationship("PlanUsage", back_populates="user")
