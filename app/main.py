@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from .routers import sections, users, aws_interaction, domain
-from .app_data import models, database
+from .app_data import models, database, crud
 from fastapi.middleware.cors import CORSMiddleware
 
-# models.Base.metadata.drop_all(bind=database.engine)
-models.Base.metadata.create_all(bind=database.engine)
+
 
 origins = [
     "http://localhost",
@@ -28,3 +27,12 @@ app.include_router(users.router)
 app.include_router(aws_interaction.router)
 app.include_router(domain.router)
 
+
+@app.on_event("startup")
+async def startup_event():
+    models.Base.metadata.create_all(bind=database.engine)
+    db = database.SessionLocal()
+    try:
+        crud.init_data(db)
+    finally:
+        db.close()

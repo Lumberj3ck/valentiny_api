@@ -49,17 +49,30 @@ def get_user_by_email_or_username(db: Session, user: schemas.UserCreate):
         .first()
     )
 
+def create_free_plan(db: Session):
+    free_plan = models.Plan(
+        name="Free",
+        price=0,
+        subdomains_amount=0,
+        websites_upload_amount=0
+    )
+    save_and_refresh(db, free_plan)
+    return free_plan
+
 
 def create_user(db: Session, user: schemas.UserCreate):
     password_hash = get_password_hash(user.password)
+    free_plan = db.query(models.Plan).filter(models.Plan.name == "Free").first()
+    if not free_plan:
+        free_plan = create_free_plan(db)
+
     db_user = models.User(
-        username=user.username, email=user.email, password=password_hash
+        username=user.username, email=user.email, password=password_hash, plan_id=free_plan.id
     )
-    # db.add(db_user)
-    # db.commit()
-    # db.refresh(db_user)
     save_and_refresh(db, db_user)
+    db.commit()
     return db_user
+
 
 
 def update_and_refresh(db: Session, object):
@@ -238,3 +251,33 @@ def get_user_domains(db: Session, user_id: int):
         .all()
     )
     return [{"name": subdomain, "domain_name": domain} for subdomain, domain in result]
+
+def create_plan_usage(db: Session, user_id: int):
+    new_plan_usage = models.PlanUsage(
+        user_id=user_id,
+        subdomains_count=0,
+        websites_upload_count=0
+    )
+    save_and_refresh(db, new_plan_usage)
+    return new_plan_usage
+
+def init_data(db: Session):
+    default_plans = [
+        {"name": "Free", "price": 0, "subdomains_amount": 0, "websites_upload_amount": 0},
+        {"name": "Pro", "price": 9, "subdomains_amount": 5, "websites_upload_amount": 9},
+    ]
+    for plan in default_plans:
+        if not db.query(models.Plan).filter(models.Plan.name == plan["name"]).first():
+            new_plan = models.Plan(**plan)
+            db.add(new_plan)
+    
+    default_domains = [
+        {"name": "my-valentine-postcard.site"},
+        {"name": "postcard.site"}
+    ]
+    for domain in default_domains:
+        if not db.query(models.Domain).filter(models.Domain.name == domain["name"]).first():
+            new_domain = models.Domain(**domain)
+            db.add(new_domain)
+    
+    db.commit()
