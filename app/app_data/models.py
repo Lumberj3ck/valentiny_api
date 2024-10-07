@@ -84,3 +84,13 @@ class User(Base):
     subdomains = relationship("Subdomain", back_populates="user")
     website_upload_amount = Column(Integer, default=0, nullable=False)
     subdomain_amount = Column(Integer, default=0, nullable=False)
+
+
+class Fulfillment(Base):
+    __tablename__ = "fulfillments"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    session_id = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    customer_email = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.now)

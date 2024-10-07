@@ -116,18 +116,31 @@ async def upload_website(
     if not zip_file.filename.endswith('.zip'):
         raise HTTPException(status_code=400, detail="Uploaded file must be a ZIP archive")
 
-    domain = crud.get_domain_by_name(db, domain_name)
+    domain = crud.get_domain_by_name(db, subdomain.domain_name)
     if not domain:
         raise HTTPException(status_code=400, detail="The specified domain does not exist")
+    
+    # Check if the user has available website uploads
+    if current_user.website_upload_amount <= 0:
+        raise HTTPException(status_code=403, detail="You don't have any website uploads left")
 
     existing_subdomain = crud.get_subdomain_by_name_and_domain(db, subdomain.name, subdomain.domain_name)
+    new_subdomain = None 
     if existing_subdomain:
         if existing_subdomain.user_id != current_user.id:
             raise HTTPException(status_code=400, detail="This subdomain is not available")
-        folder_name = f"{subdomain.name}"
     else:
         new_subdomain = crud.create_subdomain(db, current_user.id, subdomain.name, subdomain.domain_name)
-        folder_name = f"{new_subdomain.name}"
+
+    if new_subdomain and current_user.subdomain_amount <= 0:
+        raise HTTPException(status_code=403, detail="You don't have any subdomains left")
+
+    subdomain_decrease = 1 if new_subdomain else 0
+    current_user.subdomain_amount = max(0, current_user.subdomain_amount - subdomain_decrease)
+    crud.update_user_amounts(db, current_user)
+
+    domain_parts = subdomain.domain_name.split('.')
+    folder_name = f"{domain_parts[0]}/{subdomain.name}"
 
     try:
         s3_client.head_object(Bucket=WEBSITE_BUCKET_NAME, Key=f"{folder_name}/")
@@ -170,6 +183,9 @@ async def upload_website(
 
     if not uploaded_files:
         raise HTTPException(status_code=400, detail="No files were uploaded")
+
+    current_user.website_upload_amount = max(0, current_user.website_upload_amount - 1)
+    crud.update_user_amounts(db, current_user)
 
     return JSONResponse(content={
         "message": "Website folder uploaded successfully",

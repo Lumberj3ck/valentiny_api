@@ -13,9 +13,9 @@ async def check_subdomain_availability(
     subdomain: schemas.SubdomainCreate,
     db: Session = Depends(get_db),
 ):
-    user_subdomains = crud.get_user_subdomains(db, current_user.id)
-    if len(user_subdomains) >= 5:
-        raise HTTPException(status_code=400, detail="You have reached the maximum limit of 5 subdomains")
+    # user_subdomains = crud.get_user_subdomains(db, current_user.id)
+    # if len(user_subdomains) >= 5:
+    #     raise HTTPException(status_code=400, detail="You have reached the maximum limit of 5 subdomains")
     
     # Check if the domain exists in the Domain table
     domain = crud.get_domain_by_name(db, subdomain.domain_name)
@@ -37,18 +37,3 @@ async def get_user_domains(
     db: Session = Depends(get_db)):
     user_domains = crud.get_user_domains(db, current_user.id)
     return user_domains
-
-# curl -X POST "http://localhost/admin/add_domain/" \ -H "Content-Type: application/json" \ -d '{"domain": "my-valentine-postcard.site"}'
-from fastapi import Form
-
-@router.post("/admin/add_domain/")
-async def add_domain(
-    domain: str = Form(...),
-    db: Session = Depends(get_db),
-):
-    existing_domain = crud.get_domain_by_name(db, domain)
-    if existing_domain:
-        raise HTTPException(status_code=400, detail="This domain already exists")
-
-    crud.create_domain(db, domain)
-    return {"message": "Domain added successfully"}

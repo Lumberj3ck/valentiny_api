@@ -1,8 +1,8 @@
 import os
 from datetime import timedelta
 from fastapi import APIRouter, status
-from ..dependencies import get_db, create_access_token
-from ..app_data.schemas import UserCreate, UserCredentials, Token
+from ..dependencies import get_db, create_access_token, get_current_user
+from ..app_data.schemas import UserCreate, UserCredentials, Token, UserAuthenticate
 
 # from fastapi.security import OAuth2PasswordRequestForm
 from ..app_data import crud
@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from ..utils.password_security import authenticate_user
 from dotenv import load_dotenv
 from pathlib import Path
+from typing import Annotated
 
 router = APIRouter()
 
@@ -56,3 +57,15 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.get("/user/balance/")
+def get_user_balance(
+    current_user: Annotated[UserAuthenticate, Depends(get_current_user)],
+    db: Session = Depends(get_db)
+):
+    user_uploads_amount, user_subdomains_amount = crud.get_user_uploads_and_subdomains_amount(db, current_user.id)
+    return {
+        "website_upload_amount": user_uploads_amount,
+        "subdomain_amount": user_subdomains_amount
+    }

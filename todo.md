@@ -55,11 +55,15 @@ Whenever user logins frontend should send a request to a api user sections
 4. Add a limit for image size in nginx production - [x]
 5. Add a cors when nginx block request with 413 - [x]
 6. Add login with email - [x] 
-7. Work with jwt toke expiration datas on frontend  
-8. Update hashing key for jwt
-9. Save the images in webp
-10. Add more image types for img up
-11. Validate the file ext error on the front
-12. Think about reseting the cache after publishing the website again
-13. See whatsup with ico files when upload
+7. Work with jwt toke expiration datas on frontend  - [x]
+8. Update hashing key for jwt - [x]
+9. Save the images in webp - [x]
+10. Add more image types for img up - [x]
+11. Validate the file ext error on the front - [x]
+12. Think about reseting the cache after publishing the website again - [x]
+13. See whatsup with ico files when upload - [x]
 14. Add a domains on the server remove add domain endpoint 
+15. Decrease website publish and domain amount after user request - [x]
+16. Dont forget to add a webhook for fullfilling the order - [x]
+
+Updating secret key and handling error 

@@ -39,6 +39,8 @@ class UserCreate(UserBase):
 
 class UserAuthenticate(UserBase):
     id: int
+    website_upload_amount: int
+    subdomain_amount: int
 
 
 class User(UserBase):
@@ -131,6 +133,10 @@ class SubdomainCreate(BaseModel):
     domain_name: str
 
     model_config = ConfigDict(from_attributes=True)
+    @field_validator('name', 'domain_name', mode='before')
+    @classmethod
+    def to_lowercase(cls, value: str) -> str:
+        return value.lower() if isinstance(value, str) else value
 
 
 class SubdomainAvailability(BaseModel):

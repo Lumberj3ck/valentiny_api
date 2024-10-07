@@ -243,11 +243,41 @@ def get_user_domains(db: Session, user_id: int):
 def init_data(db: Session):
     default_domains = [
         {"name": "my-valentine-postcard.site"},
-        {"name": "postcard.site"}
+        {"name": "postcard-gift.site"}
     ]
     for domain in default_domains:
         if not db.query(models.Domain).filter(models.Domain.name == domain["name"]).first():
             new_domain = models.Domain(**domain)
             db.add(new_domain)
     
+    db.commit()
+
+def get_user_uploads_and_subdomains_amount(db: Session, user_id: int):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    uploads_amount =  user.website_upload_amount
+    subdomains_amount = user.subdomain_amount
+
+    return uploads_amount, subdomains_amount
+
+def get_fulfillment_by_session_id(db: Session, session_id: str):
+    return db.query(models.Fulfillment).filter(models.Fulfillment.session_id == session_id).first()
+
+
+def grant_user_website_upload(db: Session, user_email: int, amount: int):
+    user = db.query(models.User).filter(models.User.email == user_email).first()
+    if user:
+        user.website_upload_amount +=  amount
+        user.subdomain_amount += amount
+        save_and_refresh(db, user)
+        return user
+    return None
+
+
+
+def update_user_amounts(db: Session, current_user: schemas.UserAuthenticate):
+    db_user = get_user(db, current_user.id)
+    if db_user:
+        db_user.subdomain_amount = current_user.subdomain_amount
+        db_user.website_upload_amount = current_user.website_upload_amount
+        db.add(db_user)
     db.commit()
