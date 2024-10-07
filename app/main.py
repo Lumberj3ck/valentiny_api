@@ -1,17 +1,17 @@
 from fastapi import FastAPI
-from .routers import sections, users, aws_interaction
-from .app_data import models, database
+from .routers import checkout, sections, users, aws_interaction, domain
+from .app_data import models, database, crud
 from fastapi.middleware.cors import CORSMiddleware
 
-# models.Base.metadata.drop_all(bind=database.engine)
-models.Base.metadata.create_all(bind=database.engine)
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+dotenv_path = Path("app/.env.api")
+load_dotenv(dotenv_path=dotenv_path)
 
-origins = [
-    "http://localhost",
-    "http://localhost:5173",
-    "https://www.my-valentine-postcard.site",
-    "https://postcard-api.24-7.ro/",
-]
+origins = os.getenv('ORIGINS')
+origins = origins.split(',')
+
 
 app = FastAPI()
 
@@ -26,4 +26,15 @@ app.add_middleware(
 app.include_router(sections.router)
 app.include_router(users.router)
 app.include_router(aws_interaction.router)
+app.include_router(domain.router)
+app.include_router(checkout.router)
 
+
+@app.on_event("startup")
+async def startup_event():
+    models.Base.metadata.create_all(bind=database.engine)
+    db = database.SessionLocal()
+    try:
+        crud.init_data(db)
+    finally:
+        db.close()

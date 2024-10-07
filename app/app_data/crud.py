@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from . import models, schemas
 from ..custom_exceptions import (
     NoDBInstance,
@@ -52,14 +52,14 @@ def get_user_by_email_or_username(db: Session, user: schemas.UserCreate):
 
 def create_user(db: Session, user: schemas.UserCreate):
     password_hash = get_password_hash(user.password)
+
     db_user = models.User(
         username=user.username, email=user.email, password=password_hash
     )
-    # db.add(db_user)
-    # db.commit()
-    # db.refresh(db_user)
     save_and_refresh(db, db_user)
+    db.commit()
     return db_user
+
 
 
 def update_and_refresh(db: Session, object):
@@ -194,3 +194,90 @@ def create_section(
                 index=image_input.index, link=image_input.link, section_id=db_section.id
             )
             save_and_refresh(db, db_image_input)
+
+def get_user_subdomains(db: Session, user_id: int):
+    return db.query(models.Subdomain).filter(models.Subdomain.user_id == user_id).all()
+
+def get_subdomain_by_name_and_domain(db: Session, subdomain_name: str, domain_name: str):
+    return db.query(models.Subdomain).join(models.Domain).filter(
+        models.Subdomain.name == subdomain_name,
+        models.Domain.name == domain_name
+    ).first()
+
+def get_domain_by_name(db: Session, domain_name: str):
+    return db.query(models.Domain).filter(models.Domain.name == domain_name).first()
+
+def create_subdomain(db: Session, user_id: int, subdomain_name: str, domain_name: str):
+    domain = get_domain_by_name(db, domain_name)
+    if not domain:
+        raise NoDBInstance
+    
+    new_subdomain = models.Subdomain(
+        name=subdomain_name,
+        user_id=user_id,
+        domain_id=domain.id
+    )
+    save_and_refresh(db, new_subdomain)
+    return new_subdomain
+
+def create_domain(db: Session, domain_name: str):
+    new_domain = models.Domain(
+        name=domain_name
+    )
+    save_and_refresh(db, new_domain)
+    return new_domain
+
+def get_user_domains(db: Session, user_id: int):
+    result = (
+        db.query(
+            models.Subdomain.name.label('subdomain'),
+            models.Domain.name.label('domain')
+        )
+        .join(models.Subdomain.domain)
+        .filter(models.Subdomain.user_id == user_id)
+        .all()
+    )
+    return [{"name": subdomain, "domain_name": domain} for subdomain, domain in result]
+
+
+def init_data(db: Session):
+    default_domains = [
+        {"name": "my-valentine-postcard.site"},
+        {"name": "postcard-gift.site"}
+    ]
+    for domain in default_domains:
+        if not db.query(models.Domain).filter(models.Domain.name == domain["name"]).first():
+            new_domain = models.Domain(**domain)
+            db.add(new_domain)
+    
+    db.commit()
+
+def get_user_uploads_and_subdomains_amount(db: Session, user_id: int):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    uploads_amount =  user.website_upload_amount
+    subdomains_amount = user.subdomain_amount
+
+    return uploads_amount, subdomains_amount
+
+def get_fulfillment_by_session_id(db: Session, session_id: str):
+    return db.query(models.Fulfillment).filter(models.Fulfillment.session_id == session_id).first()
+
+
+def grant_user_website_upload(db: Session, user_email: int, amount: int):
+    user = db.query(models.User).filter(models.User.email == user_email).first()
+    if user:
+        user.website_upload_amount +=  amount
+        user.subdomain_amount += amount
+        save_and_refresh(db, user)
+        return user
+    return None
+
+
+
+def update_user_amounts(db: Session, current_user: schemas.UserAuthenticate):
+    db_user = get_user(db, current_user.id)
+    if db_user:
+        db_user.subdomain_amount = current_user.subdomain_amount
+        db_user.website_upload_amount = current_user.website_upload_amount
+        db.add(db_user)
+    db.commit()
