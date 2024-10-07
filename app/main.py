@@ -12,8 +12,8 @@ load_dotenv(dotenv_path=dotenv_path)
 origins = os.getenv('ORIGINS')
 origins = origins.split(',')
 
+app = FastAPI(docs_url=None, redoc_url=None)
 
-app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
