@@ -3,14 +3,15 @@ from .routers import checkout, sections, users, aws_interaction, domain
 from .app_data import models, database, crud
 from fastapi.middleware.cors import CORSMiddleware
 
+from dotenv import load_dotenv
+from pathlib import Path
+import os
+dotenv_path = Path("app/.env.api")
+load_dotenv(dotenv_path=dotenv_path)
 
+origins = os.getenv('ORIGINS')
+origins = origins.split(',')
 
-origins = [
-    "http://localhost",
-    "http://localhost:5173",
-    "https://www.my-valentine-postcard.site",
-    "https://postcard-api.24-7.ro/",
-]
 
 app = FastAPI()
 
