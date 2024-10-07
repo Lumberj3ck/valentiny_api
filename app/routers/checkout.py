@@ -11,7 +11,7 @@ from ..app_data.schemas import UserAuthenticate
 
 
 load_dotenv()
-CLIENT_DOMAIN = os.getenv('CLIENT_DOMAIN')
+CLIENT_DOMAINS = os.getenv('CLIENT_DOMAIN').split(',')
 WEBHOOK_SECRET_KEY = os.getenv('WEBHOOK_SECRET_KEY')
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
@@ -27,7 +27,7 @@ def create_checkout_session(
     if url.endswith('/'):
         url = url.rstrip('/')
 
-    if not url.startswith(CLIENT_DOMAIN):
+    if not any(url.startswith(domain) for domain in CLIENT_DOMAINS):
         raise HTTPException(status_code=400, detail="Invalid return URL")
 
     try:
