@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from ..main import app
+from ..app_data import models
 from ..utils.data_mutate import reset_sections_state_with_id
 from .database_initialise import engine, Base
 
@@ -55,3 +56,9 @@ def create_user_and_update_sections(test_data, random_id=False):
         json={"sections": modified_sections},
     )
     return response
+
+def create_domain(domain_name, db_session):
+    new_domain = models.Domain(name=domain_name)
+    db_session.add(new_domain)
+    db_session.commit()
+    return True
