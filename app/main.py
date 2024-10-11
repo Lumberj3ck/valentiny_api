@@ -6,13 +6,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from pathlib import Path
 import os
+from contextlib import asynccontextmanager
+
+
 dotenv_path = Path("app/.env.api")
 load_dotenv(dotenv_path=dotenv_path)
 
 origins = os.getenv('ORIGINS')
 origins = origins.split(',')
 
-app = FastAPI(docs_url=None, redoc_url=None)
+@asynccontextmanager 
+async def lifespan(app: FastAPI):
+    models.Base.metadata.create_all(bind=database.engine)
+    db = database.SessionLocal()
+    try:
+        crud.init_data(db)
+    finally:
+        db.close()
+    yield
+
+app = FastAPI(docs_url=None, redoc_url=None, lifespan=lifespan)
 
 
 app.add_middleware(
@@ -29,12 +42,3 @@ app.include_router(aws_interaction.router)
 app.include_router(domain.router)
 app.include_router(checkout.router)
 
-
-@app.on_event("startup")
-async def startup_event():
-    models.Base.metadata.create_all(bind=database.engine)
-    db = database.SessionLocal()
-    try:
-        crud.init_data(db)
-    finally:
-        db.close()
