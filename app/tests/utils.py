@@ -46,6 +46,7 @@ def create_user_and_update_sections(test_data, random_id=False):
     )
 
     modified_sections = reset_sections_state_with_id(user_sections.json())
+
     if random_id:
         modified_sections[0]["id"] = 999
     response = client.put(

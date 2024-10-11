@@ -21,31 +21,11 @@ from ..custom_exceptions import (
     DBInstanceExists,
 )
 
-# from ..app_data.schemas import TextInput
-
 router = APIRouter()
-
-# @router.delete("/section/delete/{section_id}")
-# async def delete_section(section_id: int, db: Session = Depends(get_db)):
-#     crud.delete_section(db, section_id)
-#     # sections_dict = transform_sections(sections)
-#     return {'message' : 'removed successfully'}
-
-# @router.get("/text_inputs", response_model=list[TextInput])
-# async def get_text_inputs(db: Session = Depends(get_db)):
-#     text_inputs = crud.get_text_inputs(db)
-#     return text_inputs
-#
-# @router.get("/sections", response_model=dict[str, Section])
-# async def get_sections(db: Session = Depends(get_db)):
-#     sections = crud.get_sections(db)
-#     sections_dict = transform_sections(sections)
-#     return sections_dict
 
 # If sections has id then just update and check for exceptions
 # if not check if user already has section with the same name if yes
 # throw an error else create sections
-
 
 @router.get("/user/sections/", response_model=dict[str, Section])
 async def get_sections_by_user(

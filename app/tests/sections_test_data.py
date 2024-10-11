@@ -7,6 +7,8 @@ test_data = [
         "text_color": "#000000",
         "image_inputs": [{"index": 0, "link": "string"}],
         "text_inputs": [{"index": 0, "content": "string"}],
+        # "icon_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [{"index": 0, "content": "string"}, {"index": 1, "content": "string"}],
     },
     {
         "index": 2,
@@ -16,6 +18,7 @@ test_data = [
         "text_color": "#000000",
         "image_inputs": [{"index": 0, "link": "string"}],
         "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [],
     },
     {
         "index": 3,
@@ -25,6 +28,7 @@ test_data = [
         "text_color": "#000000",
         "image_inputs": [{"index": 0, "link": "string"}],
         "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [],
     },
     {
         "index": 4,
@@ -34,10 +38,24 @@ test_data = [
         "text_color": "#000000",
         "image_inputs": [{"index": 0, "link": "string"}],
         "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [],
     },
     {
         "index": 5,
         "name": "favourite_artists",
+        "render": True,
+        "background_color": "#000000",
+        "text_color": "#000000",
+        "image_inputs": [{"index": 0, "link": "string"}],
+        "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [],
+    },
+]
+
+sections_data_with_icon_inputs = [
+    {
+        "index": 1,
+        "name": "start_section",
         "render": True,
         "background_color": "#000000",
         "text_color": "#000000",
@@ -55,6 +73,7 @@ incomplete_sections_data = [
         "text_color": "#000000",
         "image_inputs": [{"index": 0, "link": "string"}],
         "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [],
     },
     {
         "index": 2,
@@ -64,6 +83,7 @@ incomplete_sections_data = [
         "text_color": "#000000",
         "image_inputs": [{"index": 0, "link": "string"}],
         "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [],
     },
 ]
 
@@ -88,6 +108,32 @@ sections_data_no_unique_image_index = [
             {"index": 0, "link": "string"},
         ],
         "text_inputs": [
+            {"index": 0, "content": "string"},
+            {"index": 0, "content": "string"},
+        ],
+    },
+]
+
+sections_data_no_unique_icon_index = [
+    {
+        "index": 1,
+        "name": "start_section",
+        "render": True,
+        "background_color": "#000000",
+        "text_color": "#000000",
+        "image_inputs": [{"index": 0, "link": "string"}],
+        "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [{"index": 0, "content": "string"}],
+    },
+    {
+        "index": 2,
+        "name": "love_potion_recipe",
+        "render": True,
+        "background_color": "#000000",
+        "text_color": "#000000",
+        "image_inputs": [{"index": 0, "link": "string"}],
+        "text_inputs": [{"index": 0, "content": "string"}],
+        "icon_inputs": [
             {"index": 0, "content": "string"},
             {"index": 0, "content": "string"},
         ],
