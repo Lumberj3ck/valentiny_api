@@ -110,7 +110,6 @@ from ..dependencies import get_current_user
 def mock_get_current_user():
     return schemas.UserAuthenticate(id=1, username="testuser", email="test@example.com", website_upload_amount=2, subdomain_amount=2)
 
-app.dependency_overrides[get_current_user] = mock_get_current_user
 
 @pytest.fixture
 def mock_crud_functions(monkeypatch):
@@ -148,6 +147,8 @@ def test_upload_website_success(mock_crud_functions):
     assert response.status_code == 200
     assert mock_client.put_object.call_count == 2
 
+    del app.dependency_overrides[get_current_user]
+
 from dataclasses import dataclass
 
 @dataclass
@@ -158,6 +159,8 @@ class MockSubdomainWithUser:
     user_id: int
 
 def test_upload_website_success_to_existing_subdomain(mock_crud_functions):
+    app.dependency_overrides[get_current_user] = mock_get_current_user
+
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
     mock_get_domain.return_value = True
     mock_get_subdomain.return_value = MockSubdomainWithUser(id=1, name="test", domain_name="example.com", user_id=1)
@@ -176,7 +179,10 @@ def test_upload_website_success_to_existing_subdomain(mock_crud_functions):
     mock_create_subdomain.assert_not_called()
     mock_update_user_amounts.call_count == 1
 
+    del app.dependency_overrides[get_current_user]
+
 def test_upload_website_invalid_file(mock_crud_functions):
+    app.dependency_overrides[get_current_user] = mock_get_current_user
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
 
     with open("./app/tests/test_data/8.jpg", "rb") as image_file:
@@ -193,7 +199,10 @@ def test_upload_website_invalid_file(mock_crud_functions):
     mock_create_subdomain.assert_not_called()
     mock_update_user_amounts.assert_not_called()
 
+    del app.dependency_overrides[get_current_user]
+
 def test_upload_website_domain_not_exist(mock_crud_functions):
+    app.dependency_overrides[get_current_user] = mock_get_current_user
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
     mock_get_domain.return_value = None
 
@@ -211,6 +220,7 @@ def test_upload_website_domain_not_exist(mock_crud_functions):
     mock_create_subdomain.assert_not_called()
     mock_update_user_amounts.assert_not_called()
 
+    del app.dependency_overrides[get_current_user]
 
 def test_upload_website_no_uploads_left(mock_crud_functions):
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
@@ -232,6 +242,8 @@ def test_upload_website_no_uploads_left(mock_crud_functions):
     mock_get_subdomain.assert_not_called()
     mock_create_subdomain.assert_not_called()
     mock_update_user_amounts.assert_not_called()
+
+    del app.dependency_overrides[get_current_user]
 
 def test_upload_website_no_subdomains_left(mock_crud_functions):
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
@@ -258,6 +270,7 @@ def test_upload_website_no_subdomains_left(mock_crud_functions):
     mock_update_user_amounts.assert_not_called()
     # mock_update_user_amounts.assert_called_once_with(mock_update_user_amounts.call_args[0][0], override_get_current_user())
 
+    del app.dependency_overrides[get_current_user]
 
 def test_upload_website_subdomain_not_available(mock_crud_functions):
     app.dependency_overrides[get_current_user] = mock_get_current_user
@@ -280,4 +293,4 @@ def test_upload_website_subdomain_not_available(mock_crud_functions):
     mock_create_subdomain.assert_not_called()
     mock_update_user_amounts.assert_not_called()
 
-app.dependency_overrides[get_current_user] = None
+    del app.dependency_overrides[get_current_user]

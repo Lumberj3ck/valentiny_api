@@ -34,6 +34,7 @@ def db_session():
     db.close()
 
 
+
 client = TestClient(app)
 app.dependency_overrides[get_db] = override_get_db
 
@@ -145,6 +146,8 @@ def test_login_error():
 
 
 def test_get_user_sections_no_authorise():
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine)
     response = client.get("/user/sections/")
     assert response.json() == {"detail": "Not authenticated"}
 
