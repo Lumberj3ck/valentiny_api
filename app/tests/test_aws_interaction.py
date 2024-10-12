@@ -7,12 +7,25 @@ from ..dependencies import get_s3_client
 from botocore.exceptions import ClientError
 
 
-mock_client = MagicMock()
+# mock_client = MagicMock()
 
-mock_client_error = MagicMock()
+# mock_client_error = MagicMock()
 
 from ..app_data import schemas
 from ..dependencies import get_current_user
+
+# def mock_s3_client():
+#     mock_client.put_object.return_value = "https://fake-s3-url.com/test_image.jpg"
+#     return mock_client
+
+# def mock_s3_client_put_object_error():
+#     mock_client_error.put_object.side_effect = ClientError(
+#         {"Error": {"Code": "500", "Message": "Mocked error"}}, "PutObject"
+#     )
+#     return mock_client_error
+
+# app.dependency_overrides[get_s3_client] = mock_s3_client
+client = TestClient(app)
 
 def test_current_user():
     return schemas.UserAuthenticate(id=1, username="testuser", email="test@example.com", website_upload_amount=2, subdomain_amount=2)
@@ -23,31 +36,28 @@ def mock_get_current_user():
     yield
     del app.dependency_overrides[get_current_user]
 
-@pytest.fixture()
+@pytest.fixture(scope="function")
 def mocked_s3_client():
     mock_client = MagicMock()
     mock_client.put_object.return_value = "https://fake-s3-url.com/test_image.jpg"
+    app.dependency_overrides[get_s3_client] = lambda: mock_client
     yield mock_client
     mock_client.reset_mock()
+    del app.dependency_overrides[get_s3_client]
 
-def mock_s3_client():
-    mock_client.put_object.return_value = "https://fake-s3-url.com/test_image.jpg"
-    return mock_client
-
-def mock_s3_client_put_object_error():
+@pytest.fixture(scope="function")
+def mocked_s3_client_put_object_error():
+    mock_client_error = MagicMock()
     mock_client_error.put_object.side_effect = ClientError(
         {"Error": {"Code": "500", "Message": "Mocked error"}}, "PutObject"
     )
-    return mock_client_error
-
-
-
-app.dependency_overrides[get_s3_client] = mock_s3_client
-client = TestClient(app)
+    app.dependency_overrides[get_s3_client] = lambda: mock_client_error
+    yield mock_client_error
+    mock_client_error.reset_mock()
+    del app.dependency_overrides[get_s3_client]
 
 @pytest.mark.parametrize("image_path", ["./app/tests/test_data/8.jpg", "./app/tests/test_data/file_example_gif.gif", "./app/tests/test_data/file_example_webp.webp", "./app/tests/test_data/file_example_png.png", "./app/tests/test_data/file_example_tiff.tiff", "./app/tests/test_data/file_example_ico.ico"])
-def test_upload_image(image_path):
-    mock_client.reset_mock()
+def test_upload_image(image_path, mocked_s3_client):
     with open(image_path, "rb") as image:
         unique_filename = f"test_image_name"
         response = client.post(
@@ -57,7 +67,7 @@ def test_upload_image(image_path):
 
     assert response.status_code == 200
     assert "url" in response.json()
-    assert mock_client.put_object.call_count == 1
+    assert mocked_s3_client.put_object.call_count == 1
 
 def test_upload_image_too_large():
     image_content = b"fake image content" * 1000000
@@ -72,8 +82,8 @@ def test_upload_image_too_large():
     assert response.status_code == 413
 
 
-def test_upload_image_error():
-    app.dependency_overrides[get_s3_client] = mock_s3_client_put_object_error
+def test_upload_image_error(mocked_s3_client_put_object_error):
+    # app.dependency_overrides[get_s3_client] = mock_s3_client_put_object_error
 
     with open("./app/tests/test_data/8.jpg", "rb") as image:
         unique_filename = f"test_image_name"
@@ -83,7 +93,7 @@ def test_upload_image_error():
         )
 
     assert response.status_code == 500
-    assert mock_client.put_object.call_count == 1
+    assert mocked_s3_client_put_object_error.put_object.call_count == 1
 
 
 def test_upload_image_invalid_extension():
@@ -97,9 +107,9 @@ def test_upload_image_invalid_extension():
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid file extension"
 
-def test_upload_image_duplicate_filename():
-    mock_client.reset_mock()
-    app.dependency_overrides[get_s3_client] = mock_s3_client
+def test_upload_image_duplicate_filename(mocked_s3_client):
+    # mock_client.reset_mock()
+    # app.dependency_overrides[get_s3_client] = mock_s3_client
 
     with open("./app/tests/test_data/8.jpg", "rb") as image:
         unique_filename = f"test_image_name"
@@ -110,7 +120,7 @@ def test_upload_image_duplicate_filename():
 
     assert response.status_code == 200
     assert "url" in response.json()
-    assert mock_client.put_object.call_count == 1
+    assert mocked_s3_client.put_object.call_count == 1
 
     # Try uploading the same file again to trigger the duplicate filename logic
     with open("./app/tests/test_data/8.jpg", "rb") as image:
@@ -121,7 +131,7 @@ def test_upload_image_duplicate_filename():
 
     assert response.status_code == 200
     assert "url" in response.json()
-    assert mock_client.put_object.call_count == 2
+    assert mocked_s3_client.put_object.call_count == 2
 
 # --- Upload website tests ---
 
@@ -139,9 +149,9 @@ def mock_crud_functions(monkeypatch):
 
     return mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts
 
-def test_upload_website_success(mock_crud_functions, mock_get_current_user):
+def test_upload_website_success(mock_crud_functions, mock_get_current_user, mocked_s3_client):
     # app.dependency_overrides[get_current_user] = mock_get_current_user
-    mock_client.reset_mock()
+    # mock_client.reset_mock()
 
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
     mock_get_domain.return_value = True
@@ -159,7 +169,7 @@ def test_upload_website_success(mock_crud_functions, mock_get_current_user):
     mock_create_subdomain.assert_called_once_with(mock_create_subdomain.call_args[0][0], 1, "test", "example.com")
     mock_update_user_amounts.call_count == 2
     assert response.status_code == 200
-    assert mock_client.put_object.call_count == 2
+    assert mocked_s3_client.put_object.call_count == 2
 
     # del app.dependency_overrides[get_current_user]
 
@@ -172,7 +182,7 @@ class MockSubdomainWithUser:
     domain_name: str
     user_id: int
 
-def test_upload_website_success_to_existing_subdomain(mock_crud_functions, mock_get_current_user):
+def test_upload_website_success_to_existing_subdomain(mock_crud_functions, mock_get_current_user, mocked_s3_client):
     # app.dependency_overrides[get_current_user] = mock_get_current_user
 
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
@@ -187,7 +197,7 @@ def test_upload_website_success_to_existing_subdomain(mock_crud_functions, mock_
         )
 
     assert response.status_code == 200
-    mock_client.put_object.assert_called()
+    mocked_s3_client.put_object.assert_called()
     mock_get_domain.assert_called_once_with(mock_get_domain.call_args[0][0], "example.com")
     mock_get_subdomain.assert_called_once_with(mock_get_subdomain.call_args[0][0], "test", "example.com")
     mock_create_subdomain.assert_not_called()
@@ -195,7 +205,7 @@ def test_upload_website_success_to_existing_subdomain(mock_crud_functions, mock_
 
     # del app.dependency_overrides[get_current_user]
 
-def test_upload_website_invalid_file(mock_crud_functions, mock_get_current_user):
+def test_upload_website_invalid_file(mock_crud_functions, mock_get_current_user, mocked_s3_client):
     # app.dependency_overrides[get_current_user] = mock_get_current_user
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
 
@@ -288,7 +298,7 @@ def test_upload_website_no_subdomains_left(mock_crud_functions):
 
 def test_upload_website_subdomain_not_available(mock_crud_functions, mock_get_current_user):
     # app.dependency_overrides[get_current_user] = mock_get_current_user
-    mock_client.reset_mock()
+    # mock_client.reset_mock()
     mock_get_domain, mock_get_subdomain, mock_create_subdomain, mock_update_user_amounts = mock_crud_functions
     mock_get_domain.return_value = True
     mock_get_subdomain.return_value = MockSubdomainWithUser(id=1, name="test", domain_name="example.com", user_id=2)
