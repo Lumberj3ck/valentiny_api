@@ -129,11 +129,13 @@ async def upload_website(
     if existing_subdomain:
         if existing_subdomain.user_id != current_user.id:
             raise HTTPException(status_code=400, detail="This subdomain is not available")
+    elif not existing_subdomain and current_user.subdomain_amount <= 0:
+        raise HTTPException(status_code=403, detail="You don't have any subdomains left")
     else:
         new_subdomain = crud.create_subdomain(db, current_user.id, subdomain.name, subdomain.domain_name)
 
-    if new_subdomain and current_user.subdomain_amount <= 0:
-        raise HTTPException(status_code=403, detail="You don't have any subdomains left")
+    # if new_subdomain and current_user.subdomain_amount <= 0:
+    #     raise HTTPException(status_code=403, detail="You don't have any subdomains left")
 
     subdomain_decrease = 1 if new_subdomain else 0
     current_user.subdomain_amount = max(0, current_user.subdomain_amount - subdomain_decrease)

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator, ConfigDict
 from datetime import datetime
+from typing import Optional
 
 
 class UserCredentials(BaseModel):
@@ -64,6 +65,10 @@ class ImageInput(BaseModel):
     link: str | None
     id: int | None = None
 
+class IconInput(BaseModel):
+    index: int
+    content: str | None = None
+    id: int | None = None
 
 # class TextInput(TextInputCreate):
 #     id: int | None = None
@@ -94,6 +99,7 @@ class SectionSave(SectionBase):
     id: int | None = None
     image_inputs: list[ImageInput] | None = None
     text_inputs: list[TextInput] | None = None
+    icon_inputs: list[IconInput] | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -101,6 +107,9 @@ class SectionSave(SectionBase):
         validate_input_indexes
     )
     _validate_image_input_indexes = field_validator("image_inputs", mode='before')(
+        validate_input_indexes
+    )
+    _validate_icon_input_indexes = field_validator("icon_inputs", mode='before')(
         validate_input_indexes
     )
 
@@ -121,7 +130,7 @@ class Section(SectionBase):
     # user_id: int
     image_inputs: dict[int, ImageInput] | None = None
     text_inputs: dict[int, TextInput] | None = None
-
+    icon_inputs: Optional[dict[int, IconInput]] = None
     model_config = ConfigDict(from_attributes=True)
 
     # class Config:

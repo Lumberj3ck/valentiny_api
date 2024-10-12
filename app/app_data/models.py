@@ -21,6 +21,7 @@ class Section(Base):
     text_color = Column(String)
     text_inputs = relationship("TextInput", back_populates="section")
     image_inputs = relationship("ImageInput", back_populates="section")
+    icon_inputs = relationship("IconInput", back_populates="section")
 
 
 class TextInput(Base):
@@ -45,6 +46,18 @@ class ImageInput(Base):
         Integer, ForeignKey("sections.id", ondelete="CASCADE"), nullable=False
     )
     section = relationship("Section", back_populates="image_inputs")
+
+class IconInput(Base):
+    __tablename__ = "icon_input"
+
+    id = Column(Integer, primary_key=True, nullable=False)
+    index = Column(Integer)
+    content = Column(String(length=255))
+    section_id = Column(
+        Integer, ForeignKey("sections.id", ondelete="CASCADE"), nullable=False
+    )
+    section = relationship("Section", back_populates="icon_inputs")
+
 
 class Subdomain(Base):
     __tablename__ = "subdomains"

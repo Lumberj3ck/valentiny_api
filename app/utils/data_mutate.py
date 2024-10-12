@@ -9,8 +9,13 @@ def transform_sections(sections):
             image_input.index: image_input
             for image_input in section.get("image_inputs")
         }
+        modified_icon_inputs = {
+            icon_input.index: icon_input
+            for icon_input in section.get("icon_inputs", [])
+        }
         section["text_inputs"] = modified_text_inputs
         section["image_inputs"] = modified_image_inputs
+        section["icon_inputs"] = modified_icon_inputs
 
     sections_dict = {section.name: section for section in sections}
     return sections_dict
@@ -20,6 +25,10 @@ def reset_sections_state_with_id(sections):
     sections_list = []
     for section in sections:
         section_data = sections[section]
+        modified_icon_inputs = [
+            section_data["icon_inputs"][icon_index]
+            for icon_index in section_data["icon_inputs"]
+        ]
         modified_image_inputs = [
             section_data["image_inputs"][image_index]
             for image_index in section_data["image_inputs"]
@@ -30,6 +39,7 @@ def reset_sections_state_with_id(sections):
         ]
         section_data["text_inputs"] = modified_text_inputs
         section_data["image_inputs"] = modified_image_inputs
+        section_data["icon_inputs"] = modified_icon_inputs
 
         sections_list.append(section_data)
     return sections_list
@@ -47,13 +57,21 @@ def reset_sections_state(sections):
             section_data["text_inputs"][image_index]
             for image_index in section_data["text_inputs"]
         ]
+        modified_icon_inputs = [
+            section_data["icon_inputs"][icon_index]
+            for icon_index in section_data["icon_inputs"]
+        ]
         for image in modified_image_inputs:
             image.pop("id")
         for text in modified_text_inputs:
             text.pop("id")
+        for icon in modified_icon_inputs:
+            icon.pop("id")
         section_data["text_inputs"] = modified_text_inputs
         section_data["image_inputs"] = modified_image_inputs
+        section_data["icon_inputs"] = modified_icon_inputs
         section_data.pop("id")
 
         sections_list.append(section_data)
+    print(sections_list)
     return sections_list

@@ -22,7 +22,7 @@ client = TestClient(app)
 app.dependency_overrides[get_db] = override_get_db
 
 
-@pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data])
+@pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data, sections_data_with_icon_inputs])
 def test_get_registered_user_saved_sections(test_data):
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
@@ -33,7 +33,11 @@ def test_get_registered_user_saved_sections(test_data):
 
     new_user_data = reset_sections_state(user_sections.json())
     assert user_sections.json()["start_section"]["id"]
-    assert new_user_data == test_data
+
+    if test_data == sections_data_with_icon_inputs:
+        assert user_sections.json()["start_section"]["icon_inputs"] == {}
+    else:
+        assert new_user_data == test_data
 
 
 @pytest.mark.parametrize("test_data", [test_data, incomplete_sections_data, []])
@@ -43,7 +47,7 @@ def test_create_sections_successfully(test_data):
 
 
 @pytest.mark.parametrize(
-    "test_data", [sections_data_no_unique_index, sections_data_no_unique_image_index]
+    "test_data", [sections_data_no_unique_index, sections_data_no_unique_image_index, sections_data_no_unique_icon_index]
 )
 def test_create_sections_index_not_unique(test_data):
     sections_save_response = create_user_and_save_sections(test_data)[0]

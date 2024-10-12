@@ -106,6 +106,7 @@ def get_sections_by_user(user_id, db: Session):
         .options(
             joinedload(models.Section.image_inputs),
             joinedload(models.Section.text_inputs),
+            joinedload(models.Section.icon_inputs),
         )
         .filter(models.Section.user_id == user_id)
         .all()
@@ -127,6 +128,20 @@ def update_image_input(db: Session, image_input):
     db.commit()
 
 
+def update_icon_input(db: Session, icon_input):
+    db_icon_input = (
+        db.query(models.IconInput)
+        .filter(models.IconInput.id == icon_input.id)
+        .first()
+    )
+    if db_icon_input is None:
+        raise NoDBInstance
+    
+    db_icon_input.content = icon_input.content
+    db_icon_input.index = icon_input.index
+    db.commit()
+
+
 def update_section(
     db: Session, section: schemas.SectionSave, user: schemas.UserAuthenticate
 ):
@@ -142,7 +157,7 @@ def update_section(
 
     for field, value in section.model_dump().items():
         # print(field, value)
-        if field in ("text_inputs", "image_inputs"):
+        if field in ("text_inputs", "image_inputs", "icon_inputs"):
             continue
         setattr(db_section, field, value)
 
@@ -153,6 +168,11 @@ def update_section(
     if section.image_inputs:
         for image_input in section.image_inputs:
             update_image_input(db, image_input)
+    
+    if section.icon_inputs:
+        for icon_input in section.icon_inputs:
+            update_icon_input(db, icon_input)
+
     db.commit()
 
 
@@ -194,6 +214,13 @@ def create_section(
                 index=image_input.index, link=image_input.link, section_id=db_section.id
             )
             save_and_refresh(db, db_image_input)
+    
+    if section.icon_inputs:
+        for icon_input in section.icon_inputs:
+            db_icon_input = models.IconInput(
+                index=icon_input.index, content=icon_input.content, section_id=db_section.id
+            )
+            save_and_refresh(db, db_icon_input)
 
 def get_user_subdomains(db: Session, user_id: int):
     return db.query(models.Subdomain).filter(models.Subdomain.user_id == user_id).all()
