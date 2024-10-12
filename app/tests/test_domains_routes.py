@@ -39,7 +39,6 @@ def test_check_subdomain_availability(db_session):
         headers={"Authorization": f"Bearer {jwt_token}"},
         json={"name": subdomain, "domain_name": domain_name},
     )
-    print(response.json())
     assert response.status_code == 200
     assert response.json() == {"is_available": True, "message": "This subdomain is available"}
 
