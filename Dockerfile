@@ -1,11 +1,12 @@
-FROM tiangolo/uvicorn-gunicorn:python3.11-slim
+FROM python:3.11
 
+WORKDIR /app
 
-# COPY requirements.txt .
-# RUN pip install -r requirements.txt
-COPY ./requirements.txt /code/requirements.txt
-# RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-RUN pip install -r /code/requirements.txt
+COPY ./requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY ./app /app/app
+
+ENTRYPOINT ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--workers", "1"]
 
