@@ -1,9 +1,9 @@
 # [Valentiny Project API](https://www.my-valentine-postcard.site/)
 
 ## Description
-This project is a Valentine postcard website api written using FastAPI framework. Originally crafted as a surprise for my girlfriend on Valentine's Day, it started as a [small index.html](https://github.com/Lumberj3ck/valentine_postcard) postcard landing. 
+This project is a Valentine postcard website api written using FastAPI framework.
 ## Motivation
-Suddenly, when I first build landing postcard, I realized its potential to bring joy to others, prompting me to make it customizable for everyone to create their own unique postcards. The motivation behind this project to give people the ability to make their own customisable postcards.
+Suddenly, when I first build landing [postcard](https://github.com/Lumberj3ck/valentine_postcard), I realized its potential to bring joy to others, prompting me to make it customizable for everyone to create their own unique postcards. The motivation behind this project to give people the ability to make their own customisable postcards.
 ## Usage
 To use this project, follow these direct commands:
 1. **Clone Repository:**
